@@ -1,0 +1,320 @@
+#!/bin/bash
+
+# Tests for Serval DNA configuration operations.
+#
+# Copyright 2012 Serval Project, Inc.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+source "${0%/*}/../testframework.sh"
+source "${0%/*}/../testdefs.sh"
+
+setup() {
+   setup_servald
+}
+
+assert_stderr_log() {
+   local -a warn_patterns=()
+   local -a error_patterns=()
+   while [ $# -gt 0 ]; do
+      case "$1" in
+      --warn-pattern=*) warn_patterns+=("${1#*=}"); shift;;
+      --error-pattern=*) error_patterns+=("${1#*=}"); shift;;
+      *) error "unsupported option: $1"; return;;
+      esac
+   done
+   assertStderrGrep \
+      --matches=${#error_patterns[*]} \
+      --message="stderr of ($executed) contains exactly ${#error_patterns[*]} error message(s)" \
+      '^ERROR:'
+   local pattern
+   for pattern in "${warn_patterns[@]}"; do
+      assertStderrGrep \
+         --message="stderr of ($executed) contains a warning message matching \"$pattern\"" \
+         "^WARN:.*$pattern"
+   done
+   for pattern in "${error_patterns[@]}"; do
+      assertStderrGrep \
+         --message="stderr of ($executed) contains an error message matching \"$pattern\"" \
+         "^ERROR:.*$pattern"
+   done
+}
+
+doc_GetCreateInstanceDir="Get creates instance directory"
+setup_GetCreateInstanceDir() {
+   setup
+   assert ! [ -d "$SERVALINSTANCE_PATH" ]
+}
+test_GetCreateInstanceDir() {
+   executeOk_servald config get
+   assert [ -d "$SERVALINSTANCE_PATH" ]
+}
+
+doc_SetCreateInstanceDir="Set creates instance directory"
+setup_SetCreateInstanceDir() {
+   setup
+   assert ! [ -d "$SERVALINSTANCE_PATH" ]
+}
+test_SetCreateInstanceDir() {
+   executeOk_servald config set debug.verbose 0
+   assert [ -d "$SERVALINSTANCE_PATH" ]
+}
+
+doc_GetNull="Get an unset config item"
+test_GetNull() {
+   executeOk_servald config get debug.verbose
+   assertStdoutLineCount '==' 0
+}
+
+doc_SetGet="Set and get a single config item"
+test_SetGet() {
+   executeOk_servald config set debug.verbose yes
+   executeOk_servald config get debug.verbose
+   assertStdoutLineCount '==' 1
+   assertStdoutGrep --stdout --stderr --matches=1 '^debug\.verbose=yes$'
+}
+
+doc_GetAll="Get all config items"
+test_GetAll() {
+   executeOk_servald config \
+      set debug.verbose true \
+      set log.console.show_pid true \
+      set server.chdir /tmp/nothing \
+      set rhizome.enable no
+   executeOk_servald config get
+   assertStdoutLineCount '==' 4
+   assertStdoutGrep --stdout --matches=1 '^debug\.verbose=true$'
+   assertStdoutGrep --stdout --matches=1 '^log\.console\.show_pid=true$'
+   assertStdoutGrep --stdout --matches=1 '^server\.chdir=/tmp/nothing$'
+   assertStdoutGrep --stdout --matches=1 '^rhizome\.enable=no$'
+}
+
+doc_SetDelMixed="Set and del config items in single command"
+test_SetDelMixed() {
+   executeOk_servald config \
+      set debug.verbose true \
+      set log.file.show_pid true \
+      set server.chdir /tmp/nothing \
+      set rhizome.enable no
+   executeOk_servald config \
+      set debug.verbose false \
+      del log.file.show_pid \
+      set log.file.show_time 1 \
+      del server.chdir \
+      del rhizome.enable
+   executeOk_servald config get
+   assertStdoutLineCount '==' 2
+   assertStdoutGrep --stdout --matches=1 '^debug\.verbose=false$'
+   assertStdoutGrep --stdout --matches=1 '^log\.file\.show_time=1$'
+}
+
+doc_SetTwice="Set a single config item twice"
+test_SetTwice() {
+   executeOk_servald config set debug.verbose yes
+   executeOk_servald config get debug.verbose
+   assertStdoutLineCount '==' 1
+   assertStdoutGrep --stdout --stderr --matches=1 '^debug\.verbose=yes$'
+   executeOk_servald config set debug.verbose false
+   executeOk_servald config get debug.verbose
+   assertStdoutLineCount '==' 1
+   assertStdoutGrep --stdout --stderr --matches=1 '^debug\.verbose=false$'
+}
+
+doc_DelNull="Delete an unset config item"
+test_DelNull() {
+   executeOk_servald config del debug.verbose
+   assertStdoutLineCount '==' 0
+}
+
+doc_Del="Delete single config item"
+test_Del() {
+   executeOk_servald config set debug.verbose yes set log.console.show_pid true
+   executeOk_servald config get
+   assertStdoutLineCount '==' 2
+   executeOk_servald config del debug.verbose
+   executeOk_servald config get
+   assertStdoutLineCount '==' 1
+   executeOk_servald config del log.show_pid
+   assertStdoutLineCount '==' 0
+}
+
+doc_CaseSensitive="Config item names are case sensitive"
+test_CaseSensitive() {
+   execute $servald config set Debug.verbose yes
+   assertExitStatus --stderr '!=' 0
+}
+
+doc_OptionNames="Config item names must be well formed"
+test_OptionNames() {
+   execute $servald config set debug. yes
+   assertExitStatus --stderr '!=' 0
+   execute $servald config set .verbose yes
+   assertExitStatus --stderr '!=' 0
+   execute $servald config del debug..verbose
+   assertExitStatus --stderr '!=' 0
+}
+
+doc_DebugFlags="Debug config options affect verbosity"
+setup_DebugFlags() {
+   setup
+   executeOk_servald config \
+      set log.console.level debug \
+      set log.console.show_pid true
+}
+test_DebugFlags() {
+   executeOk_servald echo one two three
+   assertStderrGrep --matches=0 '\<echo:argv\['
+   executeOk_servald config set debug.verbose true
+   executeOk_servald echo one two three
+   assertStderrGrep --matches=3 '\<echo:argv\['
+   executeOk_servald config set debug.verbose false
+   executeOk_servald echo one two three
+   assertStderrGrep --matches=0 '\<echo:argv\['
+}
+
+doc_InterfacesLegacyIncludeAll="Legacy 'interfaces' config option include all"
+test_InterfacesLegacyIncludeAll() {
+   executeOk_servald config set interfaces '+'
+}
+
+doc_InterfacesLegacyExcludeAll="Legacy 'interfaces' config option exclude all"
+test_InterfacesLegacyExcludeAll() {
+   executeOk_servald config set interfaces '-'
+}
+
+doc_InterfacesLegacyMixed="Legacy 'interfaces' config option mixed list"
+test_InterfacesLegacyMixed() {
+   executeOk_servald config set interfaces '+eth,-wifi,+'
+}
+
+doc_InterfacesLegacyMixedDetail="Legacy 'interfaces' config option mixed list with details"
+test_InterfacesLegacyMixedDetail() {
+   executeOk_servald config set interfaces '+eth=ethernet:4111:9M, +wifi=wifi:4112:900K, -'
+}
+
+doc_InterfacesLegacyInvalidType="Legacy 'interfaces' config option invalid type"
+test_InterfacesLegacyInvalidType() {
+   execute --stderr --core-backtrace --exit-status=2 --executable=$servald \
+      config set interfaces '+eth=foo:4111:9M'
+   assert_stderr_log \
+      --warn-pattern='"interfaces".*invalid' \
+      --error-pattern='config file.*loaded despite defects.*invalid'
+}
+
+doc_InterfacesLegacyInvalidPort="Legacy 'interfaces' config option invalid port"
+test_InterfacesLegacyInvalidPort() {
+   execute --stderr --core-backtrace --exit-status=2 --executable=$servald \
+      config set interfaces '+eth=ethernet:-1000:9M'
+   assert_stderr_log \
+      --warn-pattern='"interfaces".*invalid' \
+      --error-pattern='config file.*loaded despite defects.*invalid'
+}
+
+doc_InterfacesLegacyInvalidSpeed="Legacy 'interfaces' config option invalid speed is ignored"
+test_InterfacesLegacyInvalidSpeed() {
+   # speed option is no longer validated or used
+   execute --stderr --core-backtrace --exit-status=0 --executable=$servald \
+      config set interfaces '+eth=ethernet:4111:9Moose'
+   #assert_stderr_log \
+   #   --warn-pattern='"interfaces".*invalid' \
+   #   --error-pattern='config file.*loaded despite defects.*invalid'
+}
+
+doc_InterfacesLegacyIncompatible="Legacy 'interfaces' config option incompatible with modern form"
+test_InterfacesLegacyIncompatible() {
+   executeOk_servald config set interfaces '+'
+   execute --stderr --core-backtrace --executable=$servald \
+      config set interfaces.10.match 'eth'
+   tfw_cat $SERVALINSTANCE_PATH/serval.conf
+   assertExitStatus '==' 2
+   assert_stderr_log \
+      --warn-pattern='"interfaces.*incompatible' \
+      --error-pattern='config file.*loaded despite defects.*incompatible'
+   tfw_cat --stderr
+}
+
+doc_InterfacesModernMatch="Modern 'interfaces.N.match' config option"
+test_InterfacesModernMatch() {
+   executeOk_servald config set interfaces.0.match 'eth*, wifi*'
+}
+
+doc_InterfacesModernDummy="Modern 'interfaces.N.file' config option"
+test_InterfacesModernDummy() {
+   executeOk_servald config set interfaces.0.file dummyname
+}
+
+doc_InterfacesModernIncompatible="Config options 'interfaces.match' and 'interfaces.file' are incompatible"
+test_InterfacesModernIncompatible() {
+   executeOk_servald config set interfaces.0.match eth
+   execute --stderr --core-backtrace --executable=$servald \
+      config set interfaces.0.file dummy
+   assertExitStatus '==' 2
+   assert_stderr_log \
+      --warn-pattern='"interfaces\.0\..*incompatible' \
+      --error-pattern='config file.*loaded despite defects.*incompatible'
+}
+
+doc_InterfaceDropDgramIncompatible="Config options 'interfaces.drop_packets' and 'interfaces.socket_type=DGRAM' are incompatible"
+test_InterfaceDropDgramIncompatible() {
+   executeOk_servald config \
+      set interfaces.0.match eth \
+      set interfaces.0.socket_type dgram
+   execute --stderr --core-backtrace --executable=$servald \
+      config set interfaces.0.drop_packets 10
+   assertExitStatus '==' 2
+   assert_stderr_log \
+      --warn-pattern='"interfaces\.0\..*incompatible' \
+      --error-pattern='config file.*loaded despite defects.*incompatible'
+}
+
+doc_TooManyValues="Too many config values"
+setup_TooManyArgs() {
+   setup_servald
+   for i in {0..9}; do
+      executeOk_servald config set "interfaces.$i.match" "eth$i"
+   done
+}
+test_TooManyArgs() {
+   execute --stderr --executable=$servald config \
+      set "interfaces.99.match" "eth11" \
+      set "interfaces.99.exclude" "on" \
+      set "interfaces.99.port" "1234" \
+      set "interfaces.99.broadcast.send" "on" \
+      set "interfaces.99.broadcast.route" "on" \
+      set "interfaces.99.unicast.send" "on" \
+      set "interfaces.99.unicast.route" "on"
+   tfw_cat --stdout --stderr
+   assertExitStatus '==' 2
+}
+
+#TODO move to another test script?
+doc_CmdUsage="Show help usage"
+test_CmdUsage() {
+   executeOk_servald help
+   tfw_cat --stdout
+   executeOk_servald help rhizome
+   tfw_cat --stdout
+   executeOk_servald help unknown command
+   tfw_cat --stdout
+#TODO assert output?
+}
+doc_CmdUnknown="Unknown command"
+test_CmdUnknown() {
+   execute $servald unknown command
+   assertExitStatus '==' 255
+   tfw_cat --stdout --stderr
+}
+
+runTests "$@"

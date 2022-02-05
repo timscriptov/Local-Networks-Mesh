@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+ * Copyright (C) 2011,2012 The Serval Project
+ * 
+ * This file is part of Serval Software (http://www.servalproject.org)
+ * 
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU
+  General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ -->
+<!-- @author Romana Challans <romana@servalproject.org> -->
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <!-- Serval General -->
+    <string name="app_name">Serval Mesh</string>
+
+    <!-- Serval Main -->
+    <!-- These must say Serval Mesh, not Serval Network, because Serval provides the protocol, not the infrastructure.
+    This has important implications for telecommunications law in various countries. -->
+    <string name="callLabel">Телефон</string>
+    <string name="messageLabel">Сообщения</string>
+    <string name="contactsLabel">Контакты</string>
+    <string name="mapsLabel">Карты</string>
+    <string name="sharingLabel">Отпр. файлы</string>
+    <string name="servalLabel">Поделиться</string>
+    <string name="settingsLabel">Настройки</string>
+    <string name="powerLabel">Выкл</string>
+    <string name="helpLabel">Помощь</string>
+    <string name="connectLabel">Подключиться</string>
+
+    <string name="state_installing">Установка&#8230;</string>
+    <string name="state_upgrading">Обновление&#8230;</string>
+    <string name="state_starting">Запуск&#8230;</string>
+    <string name="state_installed">Установлено</string>
+    <string name="state_broken">Ошибка!</string>
+
+
+    <!-- Serval Buttons -->
+    <string name="btnwizard">Начать</string>
+    <string name="btnPhOk">Ок</string>
+
+    <!-- Serval Phone Set -->
+    <string name="cancelcall">Отмена</string>
+    <string name="searchpeers">Поиск</string>
+    <string name="callcellular">Звонок через сотовую сеть</string>
+
+    <!-- Serval General -->
+    <string name="setphone">Введите номер</string>
+    <string name="setname">Введите имя</string>
+
+    <!-- Serval About -->
+
+    <!-- Serval Donations -->
+
+    <!-- Serval Instruction -->
+    <string name="phoneInstr">Пожалуйста введите ваш номер телефона.\nОн не может совпадать с номером службы экстренной помощи и должен содержать не менее 5 цифр..</string>
+
+    <!-- Serval Security -->
+
+    <!-- Serval Maps -->
+
+
+    <!--  Wifi setup / warnings -->
+    <string name="openhotspottitle">Portable Wi-Fi hotspot</string>
+    <string name="openhotspotmessage">Запуск открытой точки доступа позволит другим пользователям потреблять ваши сотовые данные, это может стоить вам денег..</string>
+    <string name="adhoctesttitle">HERE BE DRAGONS!</string>
+    <string name="adhoctestmessage">Connecting to an Ad Hoc Wi-Fi network is not supported by Android. Doing this requires root permission, is unlikely to work and has the potential to damage your device and void your warranty.</string>
+    <string name="testbutton">Тест</string>
+    <string name="adhocconnectmessage">Канал: %2$d\Адрес: %3$s</string>
+    <string name="connectbutton">Подключиться</string>
+
+    <plurals name="peers_label">
+        <item quantity="one">%d Peer</item>
+        <item quantity="other">%d Peers</item>
+    </plurals>
+    <string name="server_off">Выкл</string>
+    <string name="server_starting">Запуск</string>
+    <string name="server_idle">Idle</string>
+    <string name="server_nopeers">No Peers</string>
+
+    <string name="connecting_to">Подключение к %1$s...</string>
+    <string name="connected_to">Подключено к %1$s.</string>
+    <string name="ssid_none">[Скрытая сеть]</string>
+    <plurals name="open_networks">
+        <item quantity="one">%d открытая сеть.</item>
+        <item quantity="other">%d открытые сети.</item>
+    </plurals>
+    <plurals name="known_networks">
+        <item quantity="one">%d known network.</item>
+        <item quantity="other">%d known networks.</item>
+    </plurals>
+    <plurals name="serval_networks">
+        <item quantity="one">%d Serval network.</item>
+        <item quantity="other">%d Serval networks.</item>
+    </plurals>
+
+    <string name="wifi_client">Wi-Fi</string>
+    <string name="hotspot">Portable Wi-Fi hotspot</string>
+    <string name="adhoc">Ad Hoc Mesh</string>
+    <string name="bluetooth">Bluetooth</string>
+
+    <string name="bluetooth_not_discoverable">On, but not discoverable</string>
+
+    <string name="network_target">Queued</string>
+    <string name="hotspot_restoring">Attempting to restore your hotspot configuration</string>
+
+    <string name="meshms_delivered">delivered</string>
+    <string name="meshms_read">read</string>
+    <string name="version">1.0</string>
+    <string name="manifest_id">2BD64BF074A8B0250C72DA7446D580F4D69980C3B13587EAC932E63C256AFF12</string>
+    <string name="ongoing_call">Serval Phone Call</string>
+
+    <string name="share_location">Поделиться</string>
+    <string name="copy_location">Копировать</string>
+    <string name="view_location">Просмотреть</string>
+    <string name="copied">Скопировано в буфер обмена</string>
+    <string name="clipboard_error">Сбой копирования текста в буфер обмена</string>
+    <string name="getting_location">Получение местоположения…</string>
+    <string name="share_location_via">Поделиться местоположением через</string>
+    <string name="view_location_via">Просмотреть местоположение через</string>
+
+    <string name="turn_on_GPS">Включить GPS</string>
+    <string name="permission_denied">GPS разрешение запрещено</string>
+
+    <string name="accuracy">Точность</string>
+    <string name="latitude">Широта</string>
+    <string name="longitude">Долгота</string>
+
+    <string name="choose_link">Выберите тип ссылки</string>
+
+    <string name="decimal">Десятичное</string>
+    <string name="always_ask">Спрашивать каждый раз</string>
+    <string name="link_type">Тип ссылки</string>
+
+    <string name="altitude">Высота</string>
+    <string name="speed">Скорость</string>
+    <string name="settings">Настройки</string>
+
+    <string name="stream_default">Автоматически</string>
+    <string name="stream_voice_call">Используется для телефонных звонков</string>
+    <string name="stream_system">Используется для системных звуков</string>
+    <string name="stream_ring">Используется для телефонного звонка</string>
+    <string name="stream_notification">Используется для уведомлений</string>
+    <string name="stream_music">Используется для воспроизведения музыки</string>
+    <string name="stream_dtmf">Используется для тонов DTMF</string>
+    <string name="stream_alarm">Используется для сигналов тревоги</string>
+    <string name="stream_accessibility">Используется для запросов специальных возможностей</string>
+
+    <string name="pref_title_stream_type">Звуковой поток</string>
+    <string name="pref_title_choose_stream_type">Выберите звуковой поток</string>
+
+    <string name="sotw_north">С</string>
+    <string name="sotw_east">В</string>
+    <string name="sotw_south">Ю</string>
+    <string name="sotw_west">З</string>
+    <string name="sotw_northeast">СВ</string>
+    <string name="sotw_northwest">СЗ</string>
+    <string name="sotw_southeast">ЮВ</string>
+    <string name="sotw_southwest">ЮЗ</string>
+    <string name="compassLabel">Компас</string>
+</resources>

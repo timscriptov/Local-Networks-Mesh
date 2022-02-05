@@ -1,0 +1,231 @@
+#!/bin/bash
+
+# Tests for voice calls
+#
+# Copyright 2012 Serval Project, Inc.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+source "${0%/*}/../testframework.sh"
+source "${0%/*}/../testdefs.sh"
+
+setup() {
+   setup_servald
+   assert_no_servald_processes
+   start_servald_instances +A +B
+}
+teardown() {
+   stop_all_servald_servers
+   kill_all_servald_processes
+   assert_no_servald_processes
+   report_all_servald_servers
+}
+
+configure_servald_server() {
+   create_single_identity
+   add_servald_interface
+   executeOk_servald config \
+      set debug.mdprequests on \
+      set debug.monitor on \
+      set debug.vomp on \
+      set vomp.dial_timeout_ms 1000 \
+      set vomp.ring_timeout_ms 5000 \
+      set vomp.network_timeout_ms 5000 \
+      set log.console.level DEBUG \
+      set log.console.show_time on
+}
+
+vomp_console() {
+   local C="$instance_name"
+   mkfifo "${C}_IN"
+   exec 8<>"${C}_IN" # prevent fifo from blocking
+   executeOk_servald --stdout-file="${C}_OUT" console <"${C}_IN"
+   tfw_cat --stdout --stderr
+}
+
+fork_vomp_console() {
+   local C="$instance_name"
+   fork %console$C vomp_console
+}
+
+send_to_vomp_console() {
+   local C="$1"
+   local cmd="$2"
+   tfw_log "send '$cmd' to vomp console $C"
+   assert_fork_is_running %console$C
+   echo "$cmd" >>"${C}_IN"
+}
+
+doc_nophone="Attempt to dial a node with no phone"
+test_nophone() {
+   set_instance +A
+   fork_vomp_console
+   send_to_vomp_console A "call $SIDB $DIDA $DIDB"
+   wait_until --timeout=10 grep "^Call ended$" A_OUT
+   send_to_vomp_console A "quit"
+   fork_wait_all
+   tfw_cat A_OUT
+}
+
+doc_hangup="Hangup instead of answering"
+test_hangup() {
+   foreach_instance +A +B fork_vomp_console
+   send_to_vomp_console B "call $SIDA $DIDB $DIDA"
+   wait_until --timeout=10 grep "^Dialling$" B_OUT
+   wait_until --timeout=10 grep "^Incoming call" A_OUT
+   wait_until --timeout=10 grep "^Codec list" A_OUT
+   wait_until --timeout=10 grep "^Codec list" B_OUT
+   wait_until --timeout=10 grep "^Ringing$" B_OUT
+   send_to_vomp_console A "hangup"
+   wait_until --timeout=10 grep "^Call ended$" A_OUT
+   wait_until --timeout=10 grep "^Call ended$" B_OUT
+   send_to_vomp_console A "quit"
+   send_to_vomp_console B "quit"
+   fork_wait_all
+   tfw_cat A_OUT B_OUT
+}
+
+doc_timeout="Call timeout"
+test_timeout() {
+   foreach_instance +A +B fork_vomp_console
+   send_to_vomp_console B "call $SIDA $DIDB $DIDA"
+   wait_until --timeout=10 grep "^Dialling$" B_OUT
+   wait_until --timeout=10 grep "^Incoming call" A_OUT
+   wait_until --timeout=10 grep "^Codec list" A_OUT
+   wait_until --timeout=10 grep "^Codec list" B_OUT
+   wait_until --timeout=10 grep "^Ringing$" B_OUT
+   send_to_vomp_console A "answer"
+   wait_until --timeout=10 grep "^Picked up$" B_OUT
+   send_to_vomp_console A "say hello"
+   send_to_vomp_console B "say hi there"
+   wait_until --timeout=10 grep "^hello$" B_OUT
+   wait_until --timeout=10 grep "^hi there$" A_OUT
+   stop_servald_server +B
+# B's console should just quit
+   wait_until --timeout=10 --timeout=20 grep "^Call ended$" A_OUT
+   send_to_vomp_console A "quit"
+   fork_wait_all
+   tfw_cat A_OUT B_OUT
+}
+
+doc_call_lifecycle="Successful call lifecycle"
+test_call_lifecycle() {
+   foreach_instance +A +B fork_vomp_console
+   send_to_vomp_console B "call $SIDA $DIDB $DIDA"
+   wait_until --timeout=10 grep "^Dialling$" B_OUT
+   wait_until --timeout=10 grep "^Incoming call" A_OUT
+   wait_until --timeout=10 grep "^Codec list" A_OUT
+   wait_until --timeout=10 grep "^Codec list" B_OUT
+   wait_until --timeout=10 grep "^Ringing$" B_OUT
+   send_to_vomp_console A "answer"
+   wait_until --timeout=10 grep "^Picked up$" B_OUT
+   send_to_vomp_console A "say hello"
+   send_to_vomp_console B "say hi there"
+   wait_until --timeout=10 grep "^hello$" B_OUT
+   wait_until --timeout=10 grep "^hi there$" A_OUT
+   send_to_vomp_console B "hangup"
+   wait_until --timeout=10 grep "^Call ended$" A_OUT
+   wait_until --timeout=10 grep "^Call ended$" B_OUT
+   send_to_vomp_console A "quit"
+   send_to_vomp_console B "quit"
+   fork_wait_all
+   tfw_cat A_OUT B_OUT
+}
+
+doc_concurrent="Multiple calls at once"
+setup_concurrent() {
+   setup_servald
+   assert_no_servald_processes
+   start_servald_instances +A +B +C +D +E
+}
+test_concurrent() {
+   foreach_instance +A +B +C +D +E fork_vomp_console
+   send_to_vomp_console A "call $SIDB $DIDA $DIDB"
+   send_to_vomp_console A "call $SIDC $DIDA $DIDC"
+   send_to_vomp_console D "call $SIDA $DIDD $DIDA"
+   send_to_vomp_console E "call $SIDA $DIDE $DIDA"
+   wait_until --timeout=10 grep "^Incoming call" A_OUT
+   wait_until --timeout=10 grep "^Incoming call" B_OUT
+   wait_until --timeout=10 grep "^Incoming call" C_OUT
+   wait_until --timeout=10 grep "^Codec list" A_OUT
+   wait_until --timeout=10 grep "^Codec list" B_OUT
+   wait_until --timeout=10 grep "^Codec list" C_OUT
+   wait_until --timeout=10 grep "^Codec list" D_OUT
+   wait_until --timeout=10 grep "^Codec list" E_OUT
+   wait_until --timeout=10 grep "^Ringing$" A_OUT
+   wait_until --timeout=10 grep "^Ringing$" D_OUT
+   wait_until --timeout=10 grep "^Ringing$" E_OUT
+   send_to_vomp_console A "answer"
+   send_to_vomp_console A "answer"
+   send_to_vomp_console B "answer"
+   send_to_vomp_console C "hangup"
+   wait_until --timeout=10 grep "^Picked up$" A_OUT
+   wait_until --timeout=10 grep "^Picked up$" D_OUT
+   wait_until --timeout=10 grep "^Picked up$" E_OUT
+   wait_until --timeout=10 grep "^Call ended$" C_OUT
+   send_to_vomp_console B "hangup"
+   send_to_vomp_console D "hangup"
+   send_to_vomp_console E "hangup"
+   wait_until --timeout=10 grep "^Call ended$" B_OUT
+   wait_until --timeout=10 grep "^Call ended$" D_OUT
+   wait_until --timeout=10 grep "^Call ended$" E_OUT
+   send_to_vomp_console A "quit"
+   send_to_vomp_console B "quit"
+   send_to_vomp_console C "quit"
+   send_to_vomp_console D "quit"
+   send_to_vomp_console E "quit"
+   fork_wait_all
+   tfw_cat A_OUT B_OUT C_OUT D_OUT E_OUT
+}
+
+doc_stun="Setup a unicast link during call establishment"
+setup_stun() {
+   configure_servald_server() {
+      executeOk_servald config \
+         set debug.overlayrouting on \
+         set debug.linkstate on \
+         set debug.verbose on \
+         set vomp.dial_timeout_ms 1000 \
+         set vomp.ring_timeout_ms 5000 \
+         set vomp.network_timeout_ms 5000 \
+         set log.console.level DEBUG \
+         set log.console.show_time on
+   }
+   setup_servald
+   assert_no_servald_processes
+   foreach_instance +A +B +C create_single_identity
+   foreach_instance +A +B +C add_servald_interface --file 1
+   foreach_instance +A +B \
+      executeOk_servald config \
+         set interfaces.1.broadcast.drop on
+   start_servald_instances +A +B +C
+}
+has_unicast_link() {
+   executeOk_servald route print
+   tfw_cat --stdout
+   if ! grep "^${SIDB}:UNICAST:dummy1:" $_tfw_tmp/stdout; then
+      return 1
+   fi
+}
+test_stun() {
+   set_instance +A
+   executeOk_servald route print
+   assertGrep --matches=1 $_tfw_tmp/stdout "^${SIDB}:INDIRECT::${SIDC}"
+   test_call_lifecycle
+   set_instance +A
+   wait_until --timeout=10 has_unicast_link
+}
+
+runTests "$@"

@@ -1,0 +1,781 @@
+#!/bin/sh
+# vim: sts=2 sw=2 et
+#
+# Serval Mesh Android application
+# Development tool - adb(1) wrapper
+# Copyright (C) 2011-2014 The Serval Project, Inc.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+ME="${0##*/}"
+HERE=`dirname "$0"`
+DEV=DEVICE
+APK_RELEASE="$HERE/bin/batphone-release.apk"
+APK_BETA="$HERE/bin/batphone-beta.apk"
+APK_ALPHA="$HERE/bin/batphone-alpha.apk"
+APK_DEBUG="$HERE/bin/batphone-debug.apk"
+AHOME=/data/data/org.servalproject
+ATMPFILE="/sdcard/.serval-$ME.tmp"
+SERVALD_BINS="
+  $HERE/libs/armeabi/servald
+  $HERE/libs/armeabi/servaldsimple
+"
+SERVALD_LIBS="
+  $HERE/libs/armeabi/libserval.so
+"
+TMP=${SERVAL_TMPDIR:-${TMPDIR:-/tmp}}
+
+usage() {
+  echo	  "Usage: ${0##*/} [options] query"
+  echo	  "       ${0##*/} [options] action [args ... ;] [action [args ... ;] ...]"
+  echo	  "Options:"
+  echo	  "   -n             Dry run; print trace of commands but do not execute"
+  echo	  "   -b             Batch mode; do not tail output logs, just wait for completion"
+  echo	  "   -s DEV         Perform actions only on devices starting with DEV (can give more than once)"
+  echo	  "   -o FILE        Append all log output to FILE (- means stderr)"
+  echo	  "   -h, -?         Display this help and exit"
+  echo	  "Queries (run once globally):"
+  echo	  "   ls                                  List connected devices, human readable"
+  echo	  "   lsv|list-devices                    List all connected devices, one device per line"
+  echo	  "   lss|list-sids                       List all SIDs on all connected devices, one SID per line"
+  echo	  "   lss1|list-sid1                      List the first SID on each connected device, one per line"
+  echo	  "   lsd|list-dids                       List all DIDs on all connected devices, one DID per line"
+  echo	  "Actions (run in sequence on all devices in parallel):"
+  echo	  "   ps                                  List all serval processes"
+  echo	  "   sh|shell [cmd args... ;]            Run shell command as shell user (interactive if no cmd)"
+  echo	  "   ash|app-shell [cmd args... ;]       Run shell command as org.servalproject user (if installed)"
+  echo	  "   su|sudo cmd [args... ;]             Run shell command as superuser"
+  echo	  "   au|app-uninstall                    Uninstall org.servalproject application"
+  echo	  "   air|app-install-release             Install $APK_RELEASE"
+  echo	  "   aib|app-install-beta                Install $APK_BETA"
+  echo	  "   aia|app-install-alpha               Install $APK_ALPHA"
+  echo	  "   aid|app-install-debug               Install $APK_DEBUG"
+  echo	  "   arr|app-reinstall-release           Reinstall $APK_RELEASE"
+  echo	  "   arb|app-reinstall-beta              Reinstall $APK_BETA"
+  echo	  "   ara|app-reinstall-alpha             Reinstall $APK_ALPHA"
+  echo	  "   ard|app-reinstall-debug             Reinstall $APK_DEBUG"
+  echo	  "   aif|app-install-file FILE.apk       Install FILE.apk"
+  echo	  "   arf|app-reinstall-file FILE.apk     Reinstall FILE.apk"
+  echo	  "   as|app-start                        Start org.servalproject application"
+  echo	  "   ak|app-kill                         Kill org.servalproject processes"
+  echo	  "   aB|app-backup [: dir ;]             Backup org.servalproject state files to local directory"
+  echo	  "   aR|app-restore [: dir ;]            Restore org.servalproject state files from local directory"
+  echo	  "   du|servald-unlock                   Unlock servald binary (chmod a+rwx various files)"
+  echo	  "   dl|servald-lock                     Lock servald binary (chmod go-rwx various files)"
+  echo	  "   dp|servald-push                     Push servald binary, if no permission then unlock and retry"
+  echo	  "   dq|servald-query                    Detect if servald is running (greps ps output)"
+  echo	  "   dt|servald-term                     Send SIGTERM to all running servald processes"
+  echo	  "   dh|servald-hup                      Send SIGHUP to all running servald processes"
+  echo	  "   d9|servald-kill                     Send SIGKILL to all running servald processes"
+  echo	  "   ds|servald-start [args... ;]        Run servald in foreground (if not running) with given args"
+  echo	  "   di|servald-invoke [args... ;]       Invoke servald with arguments"
+  echo	  "   lc|logcat [args... ;]               Run adb logcat with arguments"
+  echo	  "   fp|file-push path dest [;]          Push single file"
+  echo	  "   fp|file-push path... dest/ [;]      Push many files to single directory"
+  echo	  "   ff|file-fetch path dest [;]         Fetch single file"
+  echo	  "   ff|file-fetch path ... dest/ [;]    Fetch many files to single directory"
+  echo	  "   ms|meshms-send DST text [;]         Send MeshMS to DST (DID or SID or abbreviated DEV)"
+  echo    "Abbreviated action and query names may change, so only use long names in scripts."
+}
+
+_fatal() {
+  echo "$@" >&2
+  exit 1
+}
+
+# Logic to ensure that all child processes are terminated and temporary files
+# cleaned up whenever this script terminates.
+pids=
+running_pid=
+_cleanup() {
+  [ "$running_pid" ] && kill $running_pid 2>/dev/null
+  [ "$pids" ] && kill $pids 2>/dev/null
+  rm -rf ${TMP}/$ME-$$-*
+}
+trap 'stat=$?; _cleanup; exit $stat' 0 1 2 15
+
+# The following functions implement actions.  Functions starting with underscore '_' are generally
+# not exposed directly to the command line.
+
+shell() {
+  run adb -s $DEV shell "$@"
+}
+
+shell_sudo() {
+  run adb -s $DEV shell echo "$@" \| su
+}
+
+serval_processes() {
+  _stat "$AHOME"
+  if [ -z "$uid" ]; then
+    if $flag_verbose; then
+      echo "+ missing $AHOME"
+    fi
+  else
+    echo "+ adb -s $DEV shell ps | grep -i '^$uid '"
+    if [ $flag_dryrun -le 1 ]; then
+      adb -s $DEV shell ps | sed -n -e '1p' -e "/^$uid /p"
+    fi
+  fi
+}
+
+app_shell() {
+  run adb -s $DEV shell run-as org.servalproject "$@"
+}
+
+app_uninstall() {
+  run adb -s $DEV uninstall org.servalproject
+}
+
+app_install() {
+  run adb -s $DEV install "$1"
+}
+
+app_reinstall() {
+  run adb -s $DEV install -r "$1"
+}
+
+app_start() {
+  run adb -s $DEV shell am start -a android.intent.action.MAIN -n org.servalproject/.Main
+}
+
+app_kill() {
+  serval_pids=`_serval_pids`
+  if [ -n "$serval_pids" ] ; then
+    local pid
+    for pid in $serval_pids; do
+      _kill $1 $pid
+    done
+  else
+    echo "+ serval is not running -- not killed"
+  fi
+}
+
+app_backup() {
+  local dir="${1:-$TMP/$ME-$DEV-serval-node}"
+  [ -d "$dir" ] || run mkdir "$dir" || return 1
+  for file in serval.conf serval.keyring; do
+    set -- $(shellarg "$AHOME/var/serval-node/$file" "$ATMPFILE")
+    run adb -s $DEV shell echo cat "$1" "\>$2" '|' su || return 1
+    run adb -s $DEV pull "$2" "$dir/$file" || return 1
+  done
+  set -- $(shellarg "$ATMPFILE")
+  run adb -s $DEV shell echo rm "$1" '|' su || true
+}
+
+app_restore() {
+  local dir="${1:-$TMP/$ME-$DEV-serval-node}"
+  (
+    cd "$dir" || exit 1
+    set -- $(shellarg "$AHOME/var" "$AHOME/var/serval-node")
+    run adb -s $DEV shell echo mkdir "$1" '|' su || return 1
+    run adb -s $DEV shell echo mkdir "$2" '|' su || return 1
+    for file in *; do
+      set -- $(shellarg "$AHOME/var/serval-node/$file" "$ATMPFILE")
+      run adb -s $DEV push "$file" "$2" || exit 1
+      run adb -s $DEV shell echo cat "$2" "\>$1" '|' su || return 1
+    done
+    exit 0
+  )
+  set -- $(shellarg "$ATMPFILE")
+  run adb -s $DEV shell echo rm "$1" '|' su || true
+}
+
+servald_push() {
+  if ! _servald_push 2>$TMP/$ME-$$-pusherrs; then
+    if grep -q -i 'permission denied' $TMP/$ME-$$-pusherrs; then
+      servald_unlock
+      _servald_push
+      servald_lock
+    else
+      cat $TMP/$ME-$$-pusherrs >&2
+    fi
+  fi
+}
+
+_servald_push() {
+  local bin_uid bin_gid lib_uid lib_gid
+  _stat "$AHOME/bin/servald"
+  if [ -z "$uid" -o -z "$gid" ]; then
+    echo "+ servald is not present, cannot push"
+    return 1
+  fi
+  bin_uid=$uid
+  bin_gid=$gid
+  _stat "$AHOME/lib/libserval.so"
+  if [ -z "$uid" -o -z "$gid" ]; then
+    echo "+ libserval.so is not present, cannot push"
+    return 1
+  fi
+  lib_uid=$uid
+  lib_gid=$gid
+  for bin in $SERVALD_BINS; do
+    dst="$AHOME/bin/${bin##*/}"
+    run adb -s $DEV push "$bin" "$dst" || return 1
+    run adb -s $DEV shell echo chown $bin_uid.$bin_gid "$dst" '|' su || return 1
+  done
+  for lib in $SERVALD_LIBS; do
+    dst="$AHOME/lib/${lib##*/}"
+    run adb -s $DEV push "$lib" "$dst" || return 1
+    run adb -s $DEV shell echo chown $lib_uid.$lib_gid "$dst" '|' su || return 1
+  done
+  return 0
+}
+
+_servald_chmod() {
+  run adb -s $DEV shell "cd $AHOME && echo chmod $1 bin bin/servald lib lib/libserval.so | su"
+}
+
+servald_unlock() {
+  _servald_chmod 777
+}
+
+servald_lock() {
+  _servald_chmod 755
+}
+
+servald_query() {
+  servald_pids=`_servald_pids`
+  if [ -n "$servald_pids" ] ; then
+    echo "+ servald is running, pids" $servald_pids
+  else
+    echo "+ servald is not running"
+  fi
+}
+
+servald_kill() {
+  servald_pids=`_servald_pids`
+  if [ -n "$servald_pids" ] ; then
+    local pid
+    for pid in $servald_pids; do
+      _kill $1 $pid
+    done
+  else
+    echo "+ servald is not running -- not killed"
+  fi
+}
+
+servald_start() {
+  servald_pids=`_servald_pids`
+  if [ -n "$servald_pids" ] ; then
+    echo "+ servald is already running, pids" $servald_pids "-- not started"
+  else
+    _servald_start "$@"
+  fi
+}
+
+servald_invoke() {
+  # Preserve all arguments verbatim, particularly important for passing through
+  # empty args.
+  set -- $(shellarg "$@")
+  _servald_invoke "$@"
+}
+
+_servald_invoke() {
+  app_shell "$AHOME/bin/servald" "$@"
+}
+
+_servald_start() {
+  _servald_invoke start "$@"
+}
+
+_stat() {
+  uid=
+  gid=
+  # Different versions of busybox have different ls options and output format.
+  #  - eg, Huawei Optus phones have an older version that does not support the
+  #    '-n' option and do not output a link-count column.
+  #  - eg, CyanogenMod has a newer version that supports '-n' and has a link-count
+  #    column immediately after the mode bit column.
+  # The following code detects the user and group columns by looking for two
+  # 8-character columns at common positions separated by a single space each
+  # containing only left-justified contents with no internal space.
+  if [ $flag_dryrun -le 1 ]; then
+    local ls_out
+    ls_out=$(adb -s $DEV shell echo ls -d -l "$1" "'2>/dev/null'" '|' su)
+    uid=$(echo "$ls_out" | awk '
+        substr($0, 11, 1) == " " && substr($0, 12, 8) ~ /^[^ ]+ *$/ && substr($0, 21, 8) ~ /^[^ ]+ *$/ && substr($0, 30, 1) == " " { print $2; exit }
+        substr($0, 16, 1) == " " && substr($0, 17, 8) ~ /^[^ ]+ *$/ && substr($0, 26, 8) ~ /^[^ ]+ *$/ && substr($0, 35, 1) == " " { print $3; exit }
+      ')
+    gid=$(echo "$ls_out" | awk '
+        substr($0, 11, 1) == " " && substr($0, 12, 8) ~ /^[^ ]+ *$/ && substr($0, 21, 8) ~ /^[^ ]+ *$/ && substr($0, 30, 1) == " " { print $3; exit }
+        substr($0, 16, 1) == " " && substr($0, 17, 8) ~ /^[^ ]+ *$/ && substr($0, 26, 8) ~ /^[^ ]+ *$/ && substr($0, 35, 1) == " " { print $4; exit }
+      ')
+  fi
+}
+
+_servald_pids() {
+  if [ $flag_dryrun -le 1 ]; then
+    adb -s $DEV shell ps | tr -d '\r' | awk '$9 == "'"$AHOME/bin/servald"'" { print $2 }'
+  fi
+}
+
+_serval_pids() {
+  if [ $flag_dryrun -le 1 ]; then
+    adb -s $DEV shell ps | tr -d '\r' | awk '$9 == "'"org.servalproject"'" { print $2 }'
+  fi
+}
+
+_kill() {
+  run adb -s $DEV shell echo kill $1 $2 \| su
+}
+
+logcat() {
+  run adb -s $DEV logcat "$@"
+}
+
+filter_logcat() {
+  # TODO run ps and look for org.servalproject and filter log lines by process id
+  run logcat -v threadtime "$@" | while read log_date log_time log_proc log_thread log_level log_tag log_message; do
+    # TODO look for "Start proc org.servalproject ... pid=#### ..." and add to filter
+    case $log_level in
+      F) log_level="FATAL";;
+      E) log_level="ERROR";;
+      W) log_level="WARNING";;
+      I) log_level="INFO";;
+      D) log_level="DEBUG";;
+      V) log_level="VERBOSE";;
+    esac
+    printf "%s %s %-7s %-15s %s\n" "$log_time" "$log_proc" "$log_level" "$log_tag" "$log_message"
+  done
+}
+
+file_xfer() {
+  local op="$1"
+  shift
+  local dstarg
+  eval dstarg="\$$#"
+  local i=1
+  local src
+  local dst
+  while [ $i -lt $# ]; do
+    eval src=\"\$$i\"
+    dst="$dstarg"
+    case "$dstarg" in
+    */) dst="$dstarg${src##*/}";;
+    esac
+    run adb -s $DEV $op "$src" "$dst"
+    i=$(($i + 1))
+  done
+}
+
+meshms_send() {
+  local recipient
+  _resolve_dst recipient "$1"
+  local text="$2"
+  app_shell am startservice -a "org.servalproject.meshms.SEND_MESHMS" --es recipient "$recipient" --es text "$text"
+}
+
+_resolve_dst() {
+  local _var="$1"
+  local DST="$2"
+  [ -e "$TMP/$ME-$$-dst-table" ] || _make_dst_table
+  local matches=$(sed -n -e "/^$DST/{s/^[^=]*=//;p}" "$TMP/$ME-$$-dst-table")
+  case $(echo "$matches" | wc -l) in
+  0) _fatal "$ME: no match for '$DST'";;
+  1) [ -n "$_var" ] && eval "$_var=\"\$matches\""; return 0;;
+  *) _fatal "$ME: '$DST' is ambiguous";;
+  esac
+  return 1
+}
+
+_init_keyring_unpack() {
+  _keyring_state=ncol
+  _keyring_ncol=
+  _keyring_col_sid=
+  _keyring_col_did=
+  _keyring_col_name=
+}
+_unpack_keyring_line() {
+  local line="${1%}"
+  case $_keyring_state in
+  ncol)
+    if [ "${line#*[!0-9]}" = "$line" ]; then
+      _keyring_ncol="$line"
+      _keyring_state=headers
+    fi
+    ;;
+  headers)
+    local oIFS="$IFS"
+    IFS=:
+    set -- $line
+    IFS="$oIFS"
+    if [ "$#" != "$_keyring_ncols" ]; then
+      local i=1
+      local col
+      for col; do
+        case $col in
+        sid) _keyring_col_sid=$i;;
+        did) _keyring_col_did=$i;;
+        name) _keyring_col_name=$i;;
+        esac
+        i=$(($i+1))
+      done
+      _keyring_state=data
+    fi
+    ;;
+  data)
+    local oIFS="$IFS"
+    IFS=:
+    set -- $line
+    IFS="$oIFS"
+    eval sid="\$$_keyring_col_sid"
+    eval did="\$$_keyring_col_did"
+    eval name="\$$_keyring_col_name"
+    return 0
+    ;;
+  esac
+  return 1
+}
+
+_make_dst_table() {
+  local DEV
+  for DEV in $all_devices
+  do
+    _init_keyring_unpack
+    _is_query=true _servald_invoke keyring list '2>/dev/null' | while read key
+    do
+      if _unpack_keyring_line "$key"; then
+        echo "$sid"
+        echo "$DEV=$sid"
+        [ -n "$did" ] && echo "$did=$sid"
+      fi
+    done
+  done >"$TMP/$ME-$$-dst-table"
+}
+
+# Add shell quotation to the given arguments, so that when expanded using 'eval', the exact same
+# argument results.  This makes our argument handling fully immune to spaces and shell
+# metacharacters.
+shellarg() {
+  local arg
+  local sep=
+  local out=
+  for arg; do
+    case "$arg" in
+    '')
+      out="$out$sep''"
+      ;;
+    *[!A-Za-z_0-9.,+/-]*)
+      out="$out$sep'$(sed -e "s/'/'\\\\''/g" <<EOF
+$arg
+EOF
+)'"
+      ;;
+    *)
+      out="$out$sep$arg"
+      ;;
+    esac
+    sep=' '
+  done
+  printf '%s\n' "$out"
+}
+
+# The function we use to invoke commands.  This implements the effect of the -n (dry run) option.
+run() {
+  local stat
+  if ${_is_query:-false}; then
+    [ $flag_dryrun -gt 1 ] && return 0
+  else
+    $flag_verbose && { echo -n "+ "; shellarg "$@"; }
+    [ $flag_dryrun -gt 0 ] && return 0
+  fi
+  if $interactive; then
+    "$@"
+    return $?
+  fi
+  "$@" &
+  running_pid=$!
+  wait $!
+  stat=$?
+  running_pid=
+  return $stat
+}
+
+# Parse command-line options (leading arguments starting with '-').
+flag_verbose=true
+flag_batch=false
+flag_dryrun=0
+opt_output=
+dryrun_threshold=1
+opt_devices=
+while getopts "no:bdls:h?" opt
+do
+  case $opt in
+  n) flag_dryrun=$(($flag_dryrun+1));;
+  o) opt_output="$OPTARG";;
+  b) flag_batch=true;;
+  s) opt_devices="$opt_devices $OPTARG";;
+  h|\?) usage; exit 0;;
+  *) _fatal "$ME: unsupported option '$opt'";;
+  esac
+done
+shift $(($OPTIND - 1))
+
+# If the script was invoked with no arguments, then print a helpful usage message.
+if [ $# -eq 0 ]; then
+  echo "$ME: missing arguments" >&2
+  usage
+  exit 1
+fi
+
+# Get a list of all connected devices.
+all_devices="$(adb devices | awk 'NF == 2 && $2 == "device" {print $1}')"
+
+# Filter the device list to only those which start with any of the -s options.
+if [ -n "$opt_devices" ]; then
+  devices=
+  for DEV in $all_devices; do
+    for opt in $opt_devices; do
+      case "$DEV" in
+      "$opt"*) devices="$devices $DEV"; break;;
+      esac
+    done
+  done
+else
+  devices="$all_devices"
+fi
+if [ -z "$devices" ]; then
+  echo "no devices selected"
+  exit 0
+fi
+
+# Parse query arguments.
+query="$*"
+case "$query" in
+ls)
+  for DEV in $all_devices
+  do
+    echo "$DEV"
+    _init_keyring_unpack
+    _is_query=true _servald_invoke keyring list '2>/dev/null' | while read key
+    do
+      if _unpack_keyring_line "$key"; then
+        echo "   sid=$sid"
+        echo "       did=$did"
+        [ -n "$name" ] && echo "       name=$name"
+      fi
+    done
+  done
+  exit 0
+  ;;
+lsv | list-devices )
+  for DEV in $all_devices
+  do
+    echo -n "dev=$DEV"
+    n=0
+    _init_keyring_unpack
+    _is_query=true _servald_invoke keyring list '2>/dev/null' | while read key
+    do
+      if _unpack_keyring_line "$key"; then
+        n=$(($n + 1))
+        echo -n " sid$n=$sid"
+        [ -n "$did" ] && echo -n " did$n=$(shellarg "$did")"
+        [ -n "$name" ] && echo -n " name$n=$(shellarg "$name")"
+      fi
+    done
+    echo
+  done
+  exit 0
+  ;;
+lss | list-sids | lss1 | list-sid1 )
+  for DEV in $all_devices
+  do
+    _init_keyring_unpack
+    _is_query=true _servald_invoke keyring list '2>/dev/null' | while read key
+    do
+      if _unpack_keyring_line "$key"; then
+        echo -n "sid=$sid dev=$DEV"
+        [ -n "$did" ] && echo -n " did=$(shellarg "$did")"
+        [ -n "$name" ] && echo -n " name=$(shellarg "$name")"
+        echo
+        case "$query" in
+        *1) break;;
+        esac
+      fi
+    done
+  done
+  exit 0
+  ;;
+lsd | list-dids )
+  for DEV in $all_devices
+  do
+    _init_keyring_unpack
+    _is_query=true _servald_invoke keyring list '2>/dev/null' | while read key
+    do
+      if _unpack_keyring_line "$key"; then
+        echo -n "did=$(shellarg "$did") sid=$sid dev=$DEV"
+        [ -n "$name" ] && echo -n " name=$(shellarg "$name")"
+        echo
+      fi
+    done
+  done
+  exit 0
+  ;;
+esac
+
+# Parse remaining command-line arguments into a string of shell commands that can be executed using
+# 'eval'.  Be very careful to preserve all arguments intact, so that spaces, quotes, metacharacters
+# etc. get passed verbatim to the adb command.
+actions=true
+interactive=false
+shiftargs() {
+  actions="$actions && $1"
+  shift
+  NARGS=0
+  while [ $# -ne 0 -a "$1" != ';' ]
+  do
+    actions="$actions `shellarg \"$1\"`"
+    NARGS=$(($NARGS+1))
+    eval ARG$NARGS=\"\$1\"
+    LASTARG="$1"
+    shift
+  done
+}
+while [ $# -ne 0 ]
+do
+  action="$1"
+  shift
+  case $action in
+  \; ) ;;
+  sh | shell )		      shiftargs 'shell' "$@"; shift $NARGS; [ $NARGS -eq 0 ] && interactive=true;;
+  ash | app-shell )           shiftargs 'app_shell' "$@"; shift $NARGS;;
+  su | sudo )		      shiftargs 'shell_sudo' "$@"; shift $NARGS;;
+  ps )			      actions="$actions && serval_processes";;
+  au | app-uninstall )	      actions="$actions && app_uninstall";;
+  air | app-install-release ) actions="$actions && app_install '$APK_RELEASE'";;
+  aib | app-install-beta )    actions="$actions && app_install '$APK_BETA'";;
+  aia | app-install-alpha )   actions="$actions && app_install '$APK_ALPHA'";;
+  aid | app-install-debug )   actions="$actions && app_install '$APK_DEBUG'";;
+  arr | app-reinstall-release ) actions="$actions && app_reinstall '$APK_RELEASE'";;
+  arb | app-reinstall-beta )  actions="$actions && app_reinstall '$APK_BETA'";;
+  ara | app-reinstall-alpha ) actions="$actions && app_reinstall '$APK_ALPHA'";;
+  ard | app-reinstall-debug ) actions="$actions && app_reinstall '$APK_DEBUG'";;
+  aif | app-install-file )    actions="$actions && app_install '${1:?$action: missing APK file name}'"; shift;;
+  arf | app-reinstall-file )  actions="$actions && app_reinstall '${1:?$action: missing APK file name}'"; shift;;
+  as | app-start )	      actions="$actions && app_start";;
+  ak | app-kill )	      actions="$actions && app_kill 15";;
+  aB | app-backup | aR | app-restore )
+    case $action in
+    aB | app-backup ) function=app_backup;;
+    aR | app-restore ) function=app_restore;;
+    *) _fatal "Not happy";;
+    esac
+    case "$1" in
+    :)
+      shift
+      shiftargs "$function" "$@"
+      [ $NARGS -le 2 ] || _fatal "$ME: $action: too many args"
+      shift $NARGS
+      ;;
+    *)
+      actions="$actions && $function"
+      ;;
+    esac
+    ;;
+  du | servald-unlock )	      actions="$actions && servald_unlock";;
+  dl | servald-lock )	      actions="$actions && servald_lock";;
+  dp | servald-push )	      actions="$actions && servald_push";;
+  dq | servald-query )	      actions="$actions && servald_query";;
+  dh | servald-hup )	      actions="$actions && servald_kill -1";;
+  dt | servald-term )	      actions="$actions && servald_kill -15";;
+  d9 | servald-kill )	      actions="$actions && servald_kill -9";;
+  di | servald-invoke )       shiftargs 'servald_invoke' "$@"; shift $NARGS;;
+  ds | servald-start )	      shiftargs 'servald_start' "$@"; shift $NARGS;;
+  lc | logcat )	              shiftargs 'logcat' "$@"; shift $NARGS;;
+  flc | filter-logcat )	      shiftargs 'filter_logcat' "$@"; shift $NARGS;;
+  fp | file-push | ff | file-fetch )
+    case $action in
+    fp | file-push ) operation=push;;
+    ff | file-fetch ) operation=pull;;
+    *) _fatal "Not happy";;
+    esac
+    shiftargs 'file_xfer $operation' "$@"
+    shift $NARGS
+    [ $NARGS -lt 2 ] && _fatal "Action '$action' missing argument -- see $ME -h for help."
+    if [ $NARGS -gt 2 ]; then
+      case "$LASTARG" in
+      */) ;;
+      *) _fatal "Action '$action' last argument must be a directory and end in '/' -- see $ME -h for help.";;
+      esac
+    fi
+    ;;
+  ms | meshms-send )
+    shiftargs 'meshms_send' "$@"
+    [ $NARGS -lt 2 ] && _fatal "$ME: $action: missing arg"
+    [ $NARGS -gt 2 ] && _fatal "$ME: $action: too many args"
+    shift $NARGS
+    ;;
+  *)
+    _fatal "Unsupported action '$action' -- see $ME -h for help."
+    ;;
+  esac
+done
+
+# Execute all the actions, and collate their outputs on the terminal in the best fashion available.
+if [ $flag_dryrun -ne 0 ]; then
+  for DEV in $devices
+  do
+    eval "$actions"
+  done
+else
+  if $interactive; then
+    set -- $devices
+    if [ $# -gt 1 ]; then
+      echo "$ME: interactive command only works on one device at a time" >&2
+      echo "Use the -s DEVICE option to select one device; see $ME -h for more information." >&2
+      exit 1
+    fi
+    DEV="$1"
+    echo "+ START"
+    eval "$actions"
+    echo "+ DONE"
+  else
+    logdir="${ATOOL_LOG_DIR:-$TMP/$ME-$$-logs}"
+    mkdir -p "$logdir" || exit $?
+    tailargs=
+    for DEV in $devices
+    do
+      case $opt_output in
+      -) logfile=/dev/fd/1;;
+      '') logfile="$logdir/$DEV"; tailargs="$tailargs -f '$logfile'"; >"$logfile";;
+      *) logfile="$opt_output";;
+      esac
+      (
+        trap 'stat=$?; [ "$running_pid" ] && kill $running_pid; exit $stat' 0 1 2 15
+        echo "+ START"
+        eval "$actions"
+        echo "+ DONE"
+      ) >>"$logfile" 2>&1 &
+      pids="$pids $!"
+    done
+    if $flag_batch || [ -z "$tailargs" ]; then
+      # In batch mode there is no interaction with the user, so just wait for
+      # all the action processes to finish.
+      wait
+    else
+      # When the user quits the tail programs, the trap clause in this script
+      # will kill the running actions if they are still in progress.
+      case `multitail -V 2>&1` in
+      *'--*- multitail '*)
+        eval multitail $tailargs
+        ;;
+      *)
+        eval tail $tailargs
+        ;;
+      esac
+    fi
+  fi
+fi

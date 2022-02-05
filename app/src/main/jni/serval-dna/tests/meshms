@@ -1,0 +1,253 @@
+#!/bin/bash
+
+# Tests for MeshMS Messaging
+#
+# Copyright 2012 Serval Project, Inc.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+source "${0%/*}/../testframework.sh"
+source "${0%/*}/../testdefs.sh"
+source "${0%/*}/../testdefs_rhizome.sh"
+
+rexp_age="[0-9]\+"
+
+teardown() {
+   stop_all_servald_servers
+   kill_all_servald_processes
+   assert_no_servald_processes
+   report_all_servald_servers
+}
+
+setup_logging() {
+   executeOk_servald config \
+      set debug.meshms on \
+      set debug.rhizome on \
+      set debug.rhizome_manifest on \
+      set debug.rhizome_store on \
+      set log.console.level debug \
+      set log.console.show_time on
+}
+
+doc_MessageDelivery="Send messages, ack and read them in a 2 party conversation"
+setup_MessageDelivery() {
+   setup_servald
+   set_instance +A
+   create_identities 2
+   setup_logging
+}
+test_MessageDelivery() {
+   # 1. empty list
+   executeOk_servald meshms list messages $SIDA1 $SIDA2
+   assertStdoutIs --stdout --line=1 -e '5\n'
+   assertStdoutIs --stdout --line=2 -e '_id:offset:age:type:message\n'
+   assertStdoutLineCount '==' 2
+   # 2. create a manifest with a single message and list it back
+   executeOk_servald meshms send message $SIDA1 $SIDA2 "Hi"
+   executeOk_servald meshms list messages $SIDA1 $SIDA2
+   assertStdoutGrep --stdout --matches=1 ":>:Hi\$"
+   assertStdoutLineCount '==' 3
+   # 3. append a second message and list them both
+   executeOk_servald meshms send message $SIDA1 $SIDA2 "How are you"
+   executeOk_servald meshms list messages $SIDA1 $SIDA2
+   assertStdoutGrep --stdout --matches=1 ":>:How are you\$"
+   assertStdoutGrep --stdout --matches=1 ":>:Hi\$"
+   assertStdoutLineCount '==' 4
+   # 4. list the messages from the receivers point of view (which ACKs them)
+   executeOk_servald meshms list messages $SIDA2 $SIDA1
+   assertStdoutGrep --stdout --matches=1 "^0:25:$rexp_age:<:How are you\$"
+   assertStdoutGrep --stdout --matches=1 "^1:5:$rexp_age:<:Hi\$"
+   assertStdoutLineCount '==' 4
+   CONV_BID=$(replayStderr | sed -n -e '/MESHMS CONVERSATION BUNDLE/s/.*bid=\([0-9A-F]*\).*/\1/p')
+   CONV_SECRET=$(replayStderr | sed -n -e '/MESHMS CONVERSATION BUNDLE/s/.*secret=\([0-9A-F]*\).*/\1/p')
+   tfw_log "CONV_BID=$CONV_BID CONV_SECRET=$CONV_SECRET"
+   # 5. mark the first message as read
+   executeOk_servald meshms read messages $SIDA2 $SIDA1 5
+   tfw_cat --stderr
+   check_meshms_bundles
+   executeOk_servald meshms list messages $SIDA2 $SIDA1
+   assertStdoutGrep --stdout --matches=1 "^0:25:$rexp_age:<:How are you\$"
+   assertStdoutGrep --stdout --matches=1 "^1:5:$rexp_age:MARK:read\$"
+   assertStdoutGrep --stdout --matches=1 "^2:5:$rexp_age:<:Hi\$"
+   assertStdoutLineCount '==' 5
+   # 6. mark all messages as read
+   executeOk_servald meshms read messages $SIDA2
+   check_meshms_bundles
+   executeOk_servald meshms list messages $SIDA2 $SIDA1
+   assertStdoutGrep --stdout --matches=1 "^0:25:$rexp_age:MARK:read\$"
+   assertStdoutGrep --stdout --matches=1 "^1:25:$rexp_age:<:How are you\$"
+   assertStdoutGrep --stdout --matches=1 "^2:5:$rexp_age:<:Hi\$"
+   assertStdoutLineCount '==' 5
+   # 7. list messages from the senders point of view after they have been delivered
+   executeOk_servald meshms list messages $SIDA1 $SIDA2
+   assertStdoutGrep --stdout --matches=1 "^0:3:$rexp_age:ACK:delivered\$"
+   assertStdoutGrep --stdout --matches=1 "^1:25:$rexp_age:>:How are you\$"
+   assertStdoutGrep --stdout --matches=1 "^2:5:$rexp_age:>:Hi\$"
+   assertStdoutLineCount '==' 5
+}
+
+check_meshms_bundles() {
+   # Dump the MeshMS bundles to the log and check consistency
+   # The only "file" bundle should be the conversation list
+   executeOk_servald rhizome list file
+   unpack_stdout_list X
+   assert --stdout --stderr [ $XNROWS -eq 1 ]
+   assert --stdout --stderr [ ${XID[0]} = $CONV_BID ]
+   executeOk_servald rhizome extract bundle $CONV_BID manifest.conv payload.conv $CONV_SECRET
+   tfw_cat -v manifest.conv --hexdump payload.conv
+   # The only "MeshMS2" bundles should be the two ply bundles
+   executeOk_servald rhizome list MeshMS2
+   unpack_stdout_list X
+   assert --stdout [ $XNROWS -eq 2 ]
+   local bid
+   for bid in ${XID[*]}; do
+      executeOk_servald rhizome extract bundle $bid manifest.$bid payload.$bid
+      tfw_cat -v manifest.$bid --hexdump payload.$bid
+   done
+}
+
+has_unread_messages() {
+   executeOk_servald meshms list conversations $1
+   if ! grep ":unread:" $_tfw_tmp/stdout; then
+     return 1
+   fi
+}
+
+messages_delivered() {
+   executeOk_servald meshms list messages $1 $2
+   if ! grep ":ACK:" $_tfw_tmp/stdout; then
+     return 1
+   fi
+}
+
+doc_MessageThreading="Messages sent at the same time, thread differently"
+setup_MessageThreading() {
+   setup_servald
+   foreach_instance +A +B create_single_identity
+   foreach_instance +A +B setup_logging
+   set_instance +A
+   executeOk_servald meshms send message $SIDA $SIDB "Hello can you hear me"
+   executeOk_servald meshms send message $SIDA $SIDB "Still waiting"
+   set_instance +B
+   executeOk_servald meshms send message $SIDB $SIDA "Help Im trapped in a test case factory"
+   executeOk_servald meshms send message $SIDB $SIDA "Never mind"
+   start_servald_instances +A +B
+}
+test_MessageThreading() {
+   set_instance +B
+   wait_until has_unread_messages $SIDB
+   executeOk_servald meshms list messages $SIDB $SIDA
+   assertStdoutGrep --stdout --matches=1 "^0:46:$rexp_age:<:Still waiting\$"
+   assertStdoutGrep --stdout --matches=1 "^1:24:$rexp_age:<:Hello can you hear me\$"
+   assertStdoutGrep --stdout --matches=1 "^2:60:$rexp_age:>:Never mind\$"
+   assertStdoutGrep --stdout --matches=1 "^3:41:$rexp_age:>:Help Im trapped in a test case factory\$"
+   assertStdoutLineCount '==' 6
+   set_instance +A
+   wait_until has_unread_messages $SIDA
+   wait_until messages_delivered $SIDA $SIDB
+   executeOk_servald meshms list messages $SIDA $SIDB
+   assertStdoutGrep --stdout --matches=1 "^0:60:$rexp_age:<:Never mind\$"
+   assertStdoutGrep --stdout --matches=1 "^1:41:$rexp_age:<:Help Im trapped in a test case factory\$"
+   assertStdoutGrep --stdout --matches=1 "^2:69:$rexp_age:ACK:delivered\$"
+   assertStdoutGrep --stdout --matches=1 "^3:46:$rexp_age:>:Still waiting\$"
+   assertStdoutGrep --stdout --matches=1 "^4:24:$rexp_age:>:Hello can you hear me\$"
+   assertStdoutLineCount '==' 7
+}
+
+doc_reorderList="New incoming messages force the conversation to the top"
+setup_reorderList() {
+   setup_servald
+   set_instance +A
+   create_identities 5
+   setup_logging
+}
+test_reorderList() {
+   # new incoming messages should bump to the top
+   executeOk_servald meshms send message $SIDA4 $SIDA1 "Bump"
+   executeOk_servald meshms list conversations $SIDA1
+   assertStdoutGrep --stderr --matches=1 "^0:$SIDA4:unread:"
+   executeOk_servald meshms send message $SIDA3 $SIDA1 "Bump"
+   executeOk_servald meshms list conversations $SIDA1
+   assertStdoutGrep --stderr --matches=1 "^0:$SIDA3:unread:"
+   assertStdoutGrep --stderr --matches=1 "^1:$SIDA4:unread:"
+   executeOk_servald meshms send message $SIDA2 $SIDA1 "Bump"
+   executeOk_servald meshms list conversations $SIDA1
+   assertStdoutGrep --stderr --matches=1 "^0:$SIDA2:unread:"
+   assertStdoutGrep --stderr --matches=1 "^1:$SIDA3:unread:"
+   assertStdoutGrep --stderr --matches=1 "^2:$SIDA4:unread:"
+   executeOk_servald meshms send message $SIDA4 $SIDA1 "Bump"
+   executeOk_servald meshms list conversations $SIDA1
+   assertStdoutGrep --stderr --matches=1 "^0:$SIDA4:unread:"
+   assertStdoutGrep --stderr --matches=1 "^1:$SIDA2:unread:"
+   assertStdoutGrep --stderr --matches=1 "^2:$SIDA3:unread:"
+}
+
+doc_listConversations="List multiple conversations, with different numbers of messages"
+setup_listConversations() {
+   setup_servald
+   set_instance +A
+   create_identities 5
+   setup_logging
+   # create 3 threads, with all permutations of incoming and outgoing messages
+   executeOk_servald meshms send message $SIDA1 $SIDA2 "Message1"
+   executeOk_servald meshms send message $SIDA3 $SIDA1 "Message2"
+   executeOk_servald meshms send message $SIDA1 $SIDA4 "Message3"
+   executeOk_servald meshms send message $SIDA4 $SIDA1 "Message4"
+}
+test_listConversations() {
+   executeOk_servald meshms list conversations $SIDA1
+   tfw_cat --stdout
+   assertStdoutIs --stderr --line=1 -e '5\n'
+   assertStdoutIs --stderr --line=2 -e '_id:recipient:read:last_message:read_offset\n'
+   assertStdoutGrep --stderr --matches=1 ":$SIDA2::0:0\$"
+   assertStdoutGrep --stderr --matches=1 ":$SIDA3:unread:11:0\$"
+   assertStdoutGrep --stderr --matches=1 ":$SIDA4:unread:20:0\$"
+   assertStdoutLineCount '==' 5
+   executeOk_servald meshms list conversations $SIDA1 1
+   tfw_cat --stderr
+   assertStdoutLineCount '==' 4
+   executeOk_servald meshms list conversations $SIDA1 1 1
+   tfw_cat --stderr
+   assertStdoutLineCount '==' 3
+   # mark all incoming messages as read
+   executeOk_servald meshms read messages $SIDA1
+   tfw_cat --stderr
+   executeOk_servald meshms list conversations $SIDA1
+   assertStdoutGrep --stderr --matches=1 ":$SIDA2::0:0\$"
+   assertStdoutGrep --stderr --matches=1 ":$SIDA3::11:11\$"
+   assertStdoutGrep --stderr --matches=1 ":$SIDA4::20:20\$"
+   assertStdoutLineCount '==' 5
+   executeOk_servald meshms list messages $SIDA1 $SIDA2
+   executeOk_servald meshms list messages $SIDA1 $SIDA4
+}
+
+doc_sendNoIdentity="Send message from unknown identity"
+setup_sendNoIdentity() {
+   setup_servald
+   set_instance +A
+   create_identities 2
+   setup_logging
+   SIDX=0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF
+}
+test_sendNoIdentity() {
+   executeOk_servald meshms send message $SIDA1 $SIDX "First message"
+   execute $servald meshms send message $SIDX $SIDA1 "First reply"
+   assertExitStatus --stderr == 2
+   executeOk_servald meshms list messages $SIDA1 $SIDX
+   execute $servald meshms list messages $SIDX $SIDA1
+   assertExitStatus --stderr == 2
+}
+
+runTests "$@"

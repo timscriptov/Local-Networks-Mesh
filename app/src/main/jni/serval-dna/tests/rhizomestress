@@ -1,0 +1,240 @@
+#!/bin/bash
+
+# Stress tests for Serval rhizome protocol.
+#
+# Copyright 2012 Serval Project, Inc.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+source "${0%/*}/../testframework.sh"
+source "${0%/*}/../testdefs.sh"
+source "${0%/*}/../testdefs_rhizome.sh"
+
+shopt -s extglob
+
+finally() {
+   stop_all_servald_servers
+}
+
+teardown() {
+   kill_all_servald_processes
+   assert_no_servald_processes
+   report_all_servald_servers
+}
+
+# Called by start_servald_instances for each instance.
+configure_servald_server() {
+   add_servald_interface
+   executeOk_servald config \
+      set log.file.show_pid on \
+      set log.file.show_time on \
+      set debug.rhizome off \
+      set debug.httpd off \
+      set debug.rhizome_tx off \
+      set debug.rhizome_rx off
+}
+
+doc_StressRhizomeTransfer="Five nodes each sharing 26 bundles from 0B to 620K"
+setup_StressRhizomeTransfer() {
+   setup_servald
+   assert_no_servald_processes
+   foreach_instance +A +B +C +D +E create_single_identity
+   for i in A B C D E
+   do
+      eval "bundles$i=()"
+      set_instance +$i
+      let j=0
+      for n in 1 2 3 4 5 6 7 8 9 a b c d e f g h i j k l m n o p q r s t u v w x y z
+      do
+         local sidvar="SID$instance_name"
+         local size=$((16 * (j ** 3)))
+         tfw_log "Adding file file-$i-$n, size $size"
+         create_file file-$i-$n $size
+         tfw_nolog executeOk_servald rhizome add file "${!sidvar}" file-$i-$n file-$i-$n.manifest
+         tfw_nolog extract_stdout_manifestid BID
+         tfw_nolog extract_stdout_version VERSION
+         eval "bundles$i+=(\$BID:\$VERSION)"
+         let j=j+1
+      done
+   done
+}
+
+test_StressRhizomeTransfer() {
+   start_servald_instances +A +B +C +D +E
+   wait_until --timeout=600 bundle_received_by \
+      ${bundlesA[*]} +B +C +D +E \
+      ${bundlesB[*]} +A +C +D +E \
+      ${bundlesC[*]} +A +B +D +E \
+      ${bundlesD[*]} +A +B +C +E \
+      ${bundlesE[*]} +A +B +C +D
+   stop_all_servald_servers
+   local i
+   for i in A B C D E; do
+      set_instance +$i
+      executeOk_servald rhizome list ''
+      assert_rhizome_list --fromhere=1 file-$i-? --fromhere=0 file-!($i)-?
+      assert_rhizome_received file-!($i)-?
+   done
+}
+
+amend_file() {
+   create_file --append file$instance_name 100
+   rm -f file$instance_name.manifest # ensure 'rhizome add file' generates a new Bundle ID
+   rhizome_add_file file$instance_name
+}
+
+rhizome_list_bundle_count() {
+   executeOk_servald rhizome list ''
+   local lineCount=$(( $(replayStdout | wc -l) + 0 ))
+   tfw_log "lineCount=$lineCount"
+   echo $(($lineCount - 2))
+}
+
+rhizome_bundle_count_equals() {
+   [ $(rhizome_list_bundle_count) -eq $1 ]
+}
+
+doc_StressRhizomeAdd="Add new bundles while transferring"
+setup_StressRhizomeAdd() {
+   setup_servald
+   assert_no_servald_processes
+   foreach_instance +A +B +C +D +E +F +G +H create_single_identity
+   start_servald_instances +A +B +C +D +E +F +G +H
+}
+test_StressRhizomeAdd() {
+   local total_files=0
+   for i in A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+   do
+      foreach_instance +A +B +C +D +E +F +G +H amend_file
+      let total_files+=8
+   done
+   foreach_instance +A +B +C +D +E +F +G +H wait_until --timeout=120 rhizome_bundle_count_equals $total_files
+}
+
+doc_StressRhizomeDirect="Direct push/pull/sync 1500 bundles at once"
+setup_StressRhizomeDirect() {
+   files_per_instance=300
+   setup_servald
+   assert_no_servald_processes
+   foreach_instance +A +B +C +D +E create_single_identity
+   local i
+   for i in A B C D E
+   do
+      set_instance +$i
+      executeOk_servald config \
+         set log.file.show_time on \
+         set debug.rhizome off \
+         set debug.httpd off \
+         set debug.rhizome_tx off \
+         set debug.rhizome_rx off
+      local sidvar="SID$instance_name"
+      for ((n = 0; n < $files_per_instance; ++n)); do
+         create_file file-$i-$n 10000
+         tfw_quietly executeOk_servald rhizome add file "${!sidvar}" file-$i-$n file-$i-$n.manifest
+      done
+   done
+   start_servald_instances dummy1 +A
+   wait_until rhizome_http_server_started +A
+   get_rhizome_server_port PORTA +A
+   for i in B C D E
+   do
+      set_instance +$i
+      executeOk_servald config \
+         set rhizome.direct.peer.0 "http://${addr_localhost}:${PORTA}" \
+         set log.file.path "$instance_servald_log"
+
+   done
+}
+test_StressRhizomeDirect() {
+   set_instance +B
+   fork executeOk_servald --timeout=600 rhizome direct sync
+   set_instance +C
+   fork executeOk_servald --timeout=600 rhizome direct pull
+   set_instance +D
+   fork executeOk_servald --timeout=600 rhizome direct push
+   set_instance +E
+   fork executeOk_servald --timeout=600 rhizome direct sync
+   fork_wait_all
+   set_instance +A
+   executeOk_servald rhizome list ''
+   tfw_quietly assert_rhizome_list --fromhere=1 file-A-!(*.manifest) --fromhere=0 file-[BDE]-!(*.manifest)
+   set_instance +B
+   executeOk_servald rhizome list ''
+   tfw_quietly assert_rhizome_list --fromhere=1 file-B-!(*.manifest) --fromhere=0 file-A-!(*.manifest) --and-others
+   reportfiles CDE
+   set_instance +C
+   executeOk_servald rhizome list ''
+   tfw_quietly assert_rhizome_list --fromhere=1 file-C-!(*.manifest) --fromhere=0 file-A-!(*.manifest) --and-others
+   reportfiles BDE
+   set_instance +D
+   executeOk_servald rhizome list ''
+   tfw_quietly assert_rhizome_list --fromhere=1 file-D-!(*.manifest)
+   set_instance +E
+   executeOk_servald rhizome list ''
+   tfw_quietly assert_rhizome_list --fromhere=1 file-E-!(*.manifest) --fromhere=0 file-A-!(*.manifest) --and-others
+   reportfiles BCD
+}
+
+reportfiles() {
+   replayStdout | sed -n -e '1,2p' -e "/:file-[$1]-/p" | rhizome_list_dump name bundleid >extrafiles || exit $?
+   tfw_log "$(cat extrafiles | wc -l) file(s) received by instance +$instance_name"
+   sort -t- -k2,2 -k3,3n extrafiles
+}
+
+doc_stressmeshms="Stress test messaging with 4 instances"
+setup_stressmeshms() {
+   setup_servald
+   foreach_instance +A +B +C +D create_single_identity
+   start_servald_instances +A +B +C +D
+}
+message_arrived() {
+   executeOk_servald meshms list messages $1 $2
+   if ! grep ":<:$3\$" $_tfw_tmp/stdout; then
+     return 1
+   fi
+}
+test_stressmeshms() {
+   for i in {1..10}
+   do
+      for instance in A B C D
+      do
+         local sidvar="SID$instance"
+         set_instance +$instance
+         assert_servald_server_status running
+         executeOk_servald meshms list conversations ${!sidvar}
+         for dest in A B C D
+         do
+            [ $instance = $dest ] && continue
+            local destsid="SID$dest"
+            executeOk_servald meshms send message ${!sidvar} ${!destsid} "$instance to $dest, Message $i"
+         done
+      done
+   done
+   for instance in A B C D
+   do
+      local sidvar="SID$instance"
+      set_instance +$instance
+      for dest in A B C D
+      do
+         [ $instance = $dest ] && continue
+         local destsid="SID$dest"
+         wait_until message_arrived ${!sidvar} ${!destsid} "$dest to $instance, Message 10"
+         executeOk_servald meshms list messages ${!sidvar} ${!destsid}
+         tfw_cat --stdout
+      done
+   done
+}
+
+runTests "$@"

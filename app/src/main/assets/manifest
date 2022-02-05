@@ -1,0 +1,74 @@
+data/bin/adhoc-NOPIE
+data/bin/adhoc-PIE
+data/bin/ifconfig-NOPIE
+data/bin/ifconfig-PIE
+data/bin/iw-NOPIE
+data/bin/iw-PIE
+data/bin/iwconfig-NOPIE
+data/bin/iwconfig-PIE
+100644 c2006a1901efd1ea2a4b2b7626f3d6354c3afb58 0	data/conf/adhoc.conf
+100644 795b476f25d22224150a23b7cc28f06ba1077b3b 0	data/conf/adhoc.edify.src
+100644 eb66bc18ffedab1faf61b6bcca16c09255cfc33c 0	data/conf/logfiles.list
+100644 df0a7ed6e6a58a1ef13f7eb99aaf521f5ca5ef48 0	data/conf/wifichipsets/GalaxyS2.detect
+100644 cfb84db795e0c3543c925de3bf312842ecd8ed69 0	data/conf/wifichipsets/GalaxyS2cm.detect
+100644 2a69384a375f3c8d62b5a23872f8474174fb77e2 0	data/conf/wifichipsets/adhoc.edify.template
+100644 1983e7b460bd890d7b703bb4990c482ee7545d69 0	data/conf/wifichipsets/atheros6000.adhoc.edify
+100644 0f05f9e47de2088ce15802f530a7080345ec683c 0	data/conf/wifichipsets/atheros6000.detect
+100644 1e430d22ca3a860dedc176bf0d9ae91f5b3faacb 0	data/conf/wifichipsets/atheros6000.off.edify
+100644 b0e5c3d25c27ada3a27dac49170ae37493e4e64a 0	data/conf/wifichipsets/bcm4329-based.adhoc.edify
+100644 f3a67de1fef481888ddaa39cc6c844252754942f 0	data/conf/wifichipsets/bcm432x-based.off.edify
+100644 f2910badf3c607b7f144172ea0c30e7694d1c1cb 0	data/conf/wifichipsets/cliq.adhoc.edify
+100644 a63069ba251c6d286ee6903a47176c0bcf47b7db 0	data/conf/wifichipsets/cliq.detect
+100644 04e3c63cf7601b0e0505549a9002788e1739122b 0	data/conf/wifichipsets/cliq.off.edify
+100644 315cfe8c00ceeb04bd2f9cb2a86cb77af6f012ee 0	data/conf/wifichipsets/dream.adhoc.edify
+100644 48b82febc78d51a62d54fdcebb7f86cb8db4f6a4 0	data/conf/wifichipsets/dream.detect
+100644 9b65cdeced7ed4f7bb42bfb5d2a59dffcfe74d4f 0	data/conf/wifichipsets/dream.off.edify
+100644 9e36b85a976f4a489255ca171b55e20bd8e658de 0	data/conf/wifichipsets/droid.adhoc.edify
+100644 3604851ddcb785d6c5db1beb928a0e5e31af3ebf 0	data/conf/wifichipsets/droid.detect
+100644 704d1d06a1e3cc912969e2e8b955f6c4e8baf405 0	data/conf/wifichipsets/droid.off.edify
+100644 c3b079a1de37a1bcca93409548b3fd173aeb8745 0	data/conf/wifichipsets/espresso.adhoc.edify
+100644 c6ec7ec92e3259ec76c45e0128a56364ef318363 0	data/conf/wifichipsets/espresso.detect
+100644 19ea7ee764507d2822ceafce7d51bc04fb6fea49 0	data/conf/wifichipsets/espresso.off.edify
+100644 e6290bd3372e5ada11b43d882749c52f78106534 0	data/conf/wifichipsets/galaxy.adhoc.edify
+100644 368e8df6d42237022ec8eb6b1e15ca8bb55ce9c4 0	data/conf/wifichipsets/galaxy.off.edify
+100644 7fa743b114876af212c1c1ce5a6889f532116c24 0	data/conf/wifichipsets/galaxy1x.detect
+100644 4f7248fac9b1746693bcf799cd163bc414c639b8 0	data/conf/wifichipsets/galaxy2x.detect
+100644 d4184b629ffef55d54f843786f71e990762f8b65 0	data/conf/wifichipsets/galaxytab.adhoc.edify
+100644 d3750181dcc95614d1877eb96f4f2848ffeb13f8 0	data/conf/wifichipsets/galaxytab.detect
+100644 f13f324d3465e5a674930a3e4a8809040ac0bf87 0	data/conf/wifichipsets/generic-iw.detect
+100644 8ca015efaa32fa475362e97bb2dae6eb084cbecb 0	data/conf/wifichipsets/generic.adhoc.edify
+100644 8002551babe85f6bf2595aa7abab838daa4fedff 0	data/conf/wifichipsets/generic.detect
+100644 21ccff2748a13ccd9cd8422138f7b4c41f80b79c 0	data/conf/wifichipsets/generic.off.edify
+100644 373912e6fb99c4087f570e26daf29bf305612b50 0	data/conf/wifichipsets/gt540cm.adhoc.edify
+100644 7e40865138bdd1c297b422a80e910cda4fc6a576 0	data/conf/wifichipsets/gt540cm.detect
+100644 0cbbb2a22e9822f624cbd5f8c3b6f9adbcfea444 0	data/conf/wifichipsets/gt540cm.off.edify
+100644 9d8c280cd9bc324c9bb5113f6e04800e3c6a94d6 0	data/conf/wifichipsets/hero.adhoc.edify
+100644 9b65cdeced7ed4f7bb42bfb5d2a59dffcfe74d4f 0	data/conf/wifichipsets/hero.off.edify
+100644 984421c06ffee461c356b361d24732aaf7e0de52 0	data/conf/wifichipsets/ideos8150.adhoc.edify
+100644 c509d552a0d0572166c35c692fc753eb542a3caf 0	data/conf/wifichipsets/ideos8150.detect
+100644 2fc5ea9c4862c6fcacf4697e036b30ac352ae1a7 0	data/conf/wifichipsets/ideos8150.off.edify
+100644 0f547617ff9f795b944efcfe53582cd786117f66 0	data/conf/wifichipsets/ideos8150cm.detect
+100644 caf92642ae63be4fc040e53369beab762083c4a9 0	data/conf/wifichipsets/iw.adhoc.edify
+100644 4a9df18101020dfe6305242f7a9472a10fbb2c4e 0	data/conf/wifichipsets/iwconfig.adhoc.edify
+100644 cebfcd57b58fcb009d496f09ca3ffb410806fb07 0	data/conf/wifichipsets/known-wifi.modules
+100644 e2e7a52e0bc7b21f0c2e61ffdbf9ab6682890663 0	data/conf/wifichipsets/legend.adhoc.edify
+100644 cb24d9523c8147961d633010410438cfb175cc25 0	data/conf/wifichipsets/legend.detect
+100644 19ea7ee764507d2822ceafce7d51bc04fb6fea49 0	data/conf/wifichipsets/legend.off.edify
+100644 a60547ad796697a89a97bd27eb2179f2207f6b53 0	data/conf/wifichipsets/liquid.adhoc.edify
+100644 1b8f7774a528634c03968bfa43b7be1b62bff7c2 0	data/conf/wifichipsets/liquid.detect
+100644 04e3c63cf7601b0e0505549a9002788e1739122b 0	data/conf/wifichipsets/liquid.off.edify
+100644 ed1f7296b7fcb873f67f3cedebc04d7f5414603d 0	data/conf/wifichipsets/moment.adhoc.edify
+100644 913e09bce80628e4227f74b8b052df5142fdf643 0	data/conf/wifichipsets/moment.detect
+100644 04e3c63cf7601b0e0505549a9002788e1739122b 0	data/conf/wifichipsets/moment.off.edify
+100644 5ca41340386d28d29c3a32ef659e344ac549425a 0	data/conf/wifichipsets/nexusone.adhoc.edify
+100644 656aa3dd4c42b144c5c1a52c336e53e4835711ed 0	data/conf/wifichipsets/nexusone.detect
+100644 4d884d8d2b604de3978539897ced830d8bab1c5e 0	data/conf/wifichipsets/nexusone.off.edify
+100644 476a1c4a3d9e72f911161b8e1a1c4bba83c7904f 0	data/conf/wifichipsets/non-wifi.modules
+100644 305271d2ee9b0de4f6ae7ab521d7199bbf8cd6cf 0	data/conf/wifichipsets/olympus.adhoc.edify
+100644 e7f6b8fc5a4cad131ec8a5714bbbbea8314c9508 0	data/conf/wifichipsets/olympus.detect
+100644 5ccf7ea613c2a3853824e9c4ceec1225741c63b6 0	data/conf/wifichipsets/olympus.off.edify
+100644 6633ffc8f6b783ec9f998423153ec1771c6c872e 0	data/conf/wifichipsets/rock500.adhoc.edify
+100644 aaff3c5a3c8d8f8bc6f5ed17daf2816cf2e4c95b 0	data/conf/wifichipsets/rock500.detect
+100644 6b56c162291a154e7e278d64b06f707cd7fdaa62 0	data/conf/wifichipsets/sgs2.adhoc.edify
+100644 2fc5ea9c4862c6fcacf4697e036b30ac352ae1a7 0	data/conf/wifichipsets/sgs2.off.edify
+100644 91fd4d0b6432c385837eee11bb4cfc6dca5419e8 0	data/conf/wifichipsets/sgs2cm.adhoc.edify

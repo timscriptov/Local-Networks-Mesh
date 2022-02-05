@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# Tests for the test framework.
+#
+# Copyright 2012-2014 Serval Project, Inc.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+source "${0%/*}/../testframework.sh"
+
+test_tfw_cmp_version() {
+   execute --exit-status=1 tfw_cmp_version 1 2
+   execute --exit-status=2 tfw_cmp_version 1.0.1 1.0.0
+   execute --exit-status=1 tfw_cmp_version 1.0 1.1
+   execute --exit-status=0 tfw_cmp_version 1            1
+   execute --exit-status=1 tfw_cmp_version 2.1          2.2
+   execute --exit-status=2 tfw_cmp_version 3.0.4.10     3.0.4.2
+   execute --exit-status=1 tfw_cmp_version 4.08         4.08.01
+   execute --exit-status=2 tfw_cmp_version 3.2.1.9.8144 3.2
+   execute --exit-status=1 tfw_cmp_version 3.2          3.2.1.9.8144
+   execute --exit-status=1 tfw_cmp_version 1.2          2.1
+   execute --exit-status=2 tfw_cmp_version 2.1          1.2
+   execute --exit-status=0 tfw_cmp_version 5.6.7        5.6.7
+   execute --exit-status=0 tfw_cmp_version 1.01.1       1.1.1
+   execute --exit-status=0 tfw_cmp_version 1.1.1        1.01.1
+   execute --exit-status=0 tfw_cmp_version 1            1.0
+   execute --exit-status=0 tfw_cmp_version 1.0          1
+   execute --exit-status=0 tfw_cmp_version 1.0.2.0      1.0.2
+   execute --exit-status=0 tfw_cmp_version 1..0         1.0
+   execute --exit-status=0 tfw_cmp_version 1.0          1..0
+}
+
+test_fork() {
+   fork %A sleep 1000
+   fork %Z sleep 1001
+   fork %a sleep 1002
+   fork %z sleep 1003
+   fork %0 sleep 1004
+   fork %9 sleep 1005
+   assert_fork_is_running %A %Z %a %z
+   assert_fork_is_running %0 %9
+   fork_terminate %A
+   fork_terminate %a
+   fork_terminate %0
+   fork_wait %A %a
+   fork_wait %0
+   assert_fork_is_not_running %A %a %0
+   assert_fork_is_running %Z %z %9
+   fork_terminate_all
+   fork_wait %Z
+   fork_wait_all
+   assert_fork_is_not_running %A %Z %a %z
+   assert_fork_is_not_running %0 %9
+}
+
+runTests "$@"

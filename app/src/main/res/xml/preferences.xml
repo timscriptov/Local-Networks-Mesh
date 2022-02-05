@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="Координаты">
+
+        <ListPreference
+            android:defaultValue="@string/always_ask"
+            android:dialogTitle="@string/choose_link"
+            android:entries="@array/link_entries"
+            android:entryValues="@array/link_values"
+            android:key="prefLinkType"
+            android:summary="Выберите тип ссылки для отправки своих координат"
+            android:title="@string/link_type" />
+
+        <ListPreference
+            android:defaultValue="0"
+            android:dialogTitle="Выберите систему измерения"
+            android:entries="@array/speed_entries"
+            android:entryValues="@array/speed_values"
+            android:key="speedType"
+            android:summary="Выберите в чем измерять скорость движения"
+            android:title="Скорость" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Телефон">
+
+        <ListPreference
+            android:defaultValue="-2147483648"
+            android:dialogTitle="@string/pref_title_choose_stream_type"
+            android:entries="@array/stream_entries"
+            android:entryValues="@array/stream_values"
+            android:key="streamType"
+            android:summary="Выберите звуковой поток для общения по телефону"
+            android:title="@string/pref_title_stream_type" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

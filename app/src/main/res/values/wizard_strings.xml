@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+ * Copyright (C) 2011,2012 The Serval Project
+ * 
+ * This file is part of Serval Software (http://www.servalproject.org)
+ * 
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU
+  General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ -->
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <!-- Serval Wizard -->
+    <string name="start1">Serval software is mesh network software designed for use where there is no existing infrastructure.</string>
+    <string name="start2">To configure your phone for first time use, please use the Setup Wizard.</string>
+    <string name="welcome">Welcome to the Serval Mesh.</string>
+
+    <!-- Serval Wizard Wifi Settings -->
+    <string-array name="channelvalues">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+        <item>10</item>
+        <item>11</item>
+        <item>12</item>
+        <item>13</item>
+        <item>14</item>
+    </string-array>
+    <string-array name="channelnames">
+        <item>Channel 01 (2412 MHz)</item>
+        <item>Channel 02 (2417 MHz)</item>
+        <item>Channel 03 (2422 MHz)</item>
+        <item>Channel 04 (2427 MHz)</item>
+        <item>Channel 05 (2432 MHz)</item>
+        <item>Channel 06 (2437 MHz)</item>
+        <item>Channel 07 (2442 MHz)</item>
+        <item>Channel 08 (2447 MHz)</item>
+        <item>Channel 09 (2452 MHz)</item>
+        <item>Channel 10 (2457 MHz)</item>
+        <item>Channel 11 (2462 MHz)</item>
+        <item>Channel 12 (2467 MHz)</item>
+        <item>Channel 13 (2472 MHz)</item>
+        <item>Channel 14 (2484 MHz)</item>
+    </string-array>
+    <string-array name="powernames">
+        <item>Disabled</item>
+        <item>3 mW (5 dBm)</item>
+        <item>5 mW (7 dBm)</item>
+        <item>10 mW (10 dBm)</item>
+        <item>15 mW (12 dBm)</item>
+        <item>20 mW (13 dBm)</item>
+        <item>25 mW (14 dBm)</item>
+        <item>30 mW (15 dBm)</item>
+    </string-array>
+    <string-array name="powervalues">
+        <item>disabled</item>
+        <item>3mW</item>
+        <item>5mW</item>
+        <item>10mW</item>
+        <item>15mW</item>
+        <item>20mW</item>
+        <item>25mW</item>
+        <item>30mW</item>
+    </string-array>
+
+    <string name="pleaseWaitPreparing">Please wait while we test if we can get your device to join a Mesh network.</string>
+    <string name="welcomePreparing">Testing for Mesh support</string>
+
+</resources>
+	
+	

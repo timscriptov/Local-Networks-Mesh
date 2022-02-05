@@ -1,0 +1,401 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+ * Copyright (C) 2011 The Serval Project
+ * 
+ * This file is part of Serval Software (http://www.servalproject.org)
+ * 
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical">
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:popupTheme="@style/ThemeOverlay.AppCompat"
+        android:theme="@style/ThemeOverlay.AppCompat.ActionBar" />
+
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginRight="10dp"
+        android:animateLayoutChanges="true"
+        app:cardCornerRadius="6dp"
+        app:cardElevation="3dp">
+
+        <com.mcal.expansionpanel.ExpansionHeader
+            android:id="@+id/sampleHeader"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/cardView"
+            android:padding="16dp"
+            app:expansion_headerIndicator="@+id/headerIndicator"
+            app:expansion_layout="@+id/expansionLayout"
+            app:expansion_toggleOnClick="true">
+
+            <LinearLayout
+                android:id="@+id/statusLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/detailsText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/progressTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/getting_location"
+                    android:textAppearance="?android:attr/textAppearanceLarge"
+                    android:visibility="visible" />
+
+                <ProgressBar
+                    android:id="@+id/progressBar"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:indeterminate="true"
+                    android:visibility="visible" />
+
+                <Button
+                    android:id="@+id/gpsButton"
+                    android:layout_width="fill_parent"
+                    android:layout_height="54dp"
+                    android:onClick="openLocationSettings"
+                    android:text="@string/turn_on_GPS"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
+        </com.mcal.expansionpanel.ExpansionHeader>
+
+        <com.mcal.expansionpanel.ExpansionLayout
+            android:id="@+id/expansionLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="100dp"
+            android:layout_marginBottom="10dp"
+            android:background="@color/cardView"
+            app:expansion_expanded="false">
+
+            <LinearLayout
+                android:id="@+id/container"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/statusLayout"
+                android:orientation="horizontal"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp">
+
+                <ImageView
+                    android:id="@+id/shareButton"
+                    android:layout_width="0dp"
+                    android:layout_height="fill_parent"
+                    android:layout_weight="1"
+                    android:contentDescription="@string/share_location"
+                    android:onClick="shareLocation"
+                    android:src="@drawable/share_map" />
+
+                <ImageView
+                    android:id="@+id/copyButton"
+                    android:layout_width="0dp"
+                    android:layout_height="fill_parent"
+                    android:layout_weight="1"
+                    android:contentDescription="@string/copy_location"
+                    android:onClick="copyLocation"
+                    android:src="@drawable/copy_map" />
+
+                <ImageView
+                    android:id="@+id/viewButton"
+                    android:layout_width="0dp"
+                    android:layout_height="fill_parent"
+                    android:layout_weight="1"
+                    android:contentDescription="@string/view_location"
+                    android:onClick="viewLocation"
+                    android:src="@drawable/view_map" />
+
+            </LinearLayout>
+
+        </com.mcal.expansionpanel.ExpansionLayout>
+
+    </android.support.v7.widget.CardView>
+
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginRight="10dp"
+        android:animateLayoutChanges="true"
+        app:cardCornerRadius="6dp"
+        app:cardElevation="3dp">
+
+        <LinearLayout
+            android:id="@+id/tableMain"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/tableRow1a"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/btncall"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:contentDescription="@string/callLabel"
+                    android:src="@drawable/ic_launcher_call" />
+
+                <ImageView
+                    android:id="@+id/messageLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:contentDescription="@string/messageLabel"
+                    android:src="@drawable/ic_launcher_message" />
+
+                <ImageView
+                    android:id="@+id/contactsLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:contentDescription="@string/contactsLabel"
+                    android:src="@drawable/ic_launcher_contacts" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/tableRow1b"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/callText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="@string/callLabel" />
+
+                <TextView
+                    android:id="@+id/messageText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="@string/messageLabel" />
+
+                <TextView
+                    android:id="@+id/contactsText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="@string/contactsLabel" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/tableRow2a"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/mapsLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:contentDescription="@string/mapsLabel"
+                    android:src="@drawable/ic_launcher_map" />
+
+                <ImageView
+                    android:id="@+id/sharingLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:contentDescription="@string/sharingLabel"
+                    android:src="@drawable/ic_launcher_sharing" />
+
+                <ImageView
+                    android:id="@+id/servalLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:contentDescription="@string/servalLabel"
+                    android:src="@drawable/ic_launcher_share_us" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/tableRow2b"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/mapsText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="@string/mapsLabel" />
+
+                <TextView
+                    android:id="@+id/sharingText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="@string/sharingLabel" />
+
+                <TextView
+                    android:id="@+id/wifiText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="@string/servalLabel" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/tableRow3a"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/settingsLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:contentDescription="@string/settingsLabel"
+                    android:src="@drawable/ic_launcher_config" />
+
+                <ImageView
+                    android:id="@+id/powerLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:contentDescription="@string/powerLabel"
+                    android:src="@drawable/ic_launcher_power" />
+
+                <ImageView
+                    android:id="@+id/compassLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:contentDescription="Compass"
+                    android:src="@drawable/ic_shortcut_compass_calibration" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/tableRow3b"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/settingsText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="@string/settingsLabel" />
+
+                <TextView
+                    android:id="@+id/btntoggle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="@string/connectLabel" />
+
+                <TextView
+                    android:id="@+id/compassText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="@string/compassLabel" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </android.support.v7.widget.CardView>
+
+    <android.support.v7.widget.CardView
+        android:id="@+id/dex_protect_features"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginRight="10dp"
+        android:animateLayoutChanges="true"
+        app:cardCornerRadius="6dp"
+        app:cardElevation="3dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tableMain"
+            android:orientation="vertical"
+            android:padding="10dp">
+
+            <TextView
+                android:id="@+id/phonelabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/PhoneDetails"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/mainphonenumber"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
+
+    </android.support.v7.widget.CardView>
+
+    <!--   	<Button -->
+    <!-- 		 android:id="@+id/btnDonate" -->
+    <!-- 	     style="@style/sbtnrhizome" -->
+    <!-- 	     android:layout_alignParentBottom="true" -->
+    <!-- 	     android:layout_centerHorizontal="true" -->
+    <!-- 	     android:text="@string/donateTitle" />	  		 -->
+
+</LinearLayout>

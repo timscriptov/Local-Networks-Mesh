@@ -1,0 +1,171 @@
+#!/bin/bash
+
+# Tests for Directory Services.
+#
+# Copyright 2012 Serval Project, Inc.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+source "${0%/*}/../testframework.sh"
+source "${0%/*}/../testdefs.sh"
+
+configure_servald_server() {
+   executeOk_servald config \
+      set log.console.show_pid on \
+      set log.console.show_time on \
+      set rhizome.enable No \
+      set debug.mdprequests Yes \
+      set debug.overlayframes Yes
+}
+
+teardown() {
+   kill_all_servald_processes
+   assert_no_servald_processes
+   report_all_servald_servers
+}
+
+is_published() {
+   tfw_log "grep \"PUBLISHED.*$1\" $instance_servald_log"
+   grep "PUBLISHED.*$1" $instance_servald_log
+}
+
+sent_directory_request() {
+   grep "Sending directory registration" $instance_servald_log
+}
+
+setup_publish() {
+   setup_servald
+   assert_no_servald_processes
+   foreach_instance +A +B +C +D create_single_identity
+   set_instance +D
+   executeOk_servald keyring set did $SIDD $DIDC "Agent D Smith"
+   DIDD1=$DIDC
+   NAMED1="Agent D Smith"
+   DIDD=$DIDC1
+   NAMED=$NAMED1
+   set_instance +A
+   executeOk_servald config \
+      set dna.helper.executable "$servald_build_root/directory_service" \
+      set debug.dnahelper on
+   foreach_instance +B +C +D executeOk_servald config set directory.service $SIDA
+   foreach_instance +A +B +C +D add_servald_interface
+   start_servald_instances +A +B +C +D
+}
+
+doc_publish="Publish and retrieve a directory entry"
+test_publish() {
+   wait_until grep "DNAHELPER got STARTED ACK" $LOGA
+   foreach_instance +B +C +D wait_until sent_directory_request
+   wait_until is_published $SIDB
+   wait_until is_published $SIDC
+   wait_until is_published $SIDD
+   stop_servald_server +B
+   stop_servald_server +C
+   stop_servald_server +D
+   executeOk_servald dna lookup "$DIDB"
+   assertStdoutLineCount '==' 3
+   assertStdoutGrep --matches=1 "^sid://$SIDB/local/$DIDB:$DIDB:$NAMEB\$"
+   executeOk_servald dna lookup "$DIDC"
+   assertStdoutLineCount '==' 4
+   assertStdoutGrep --matches=1 "^sid://$SIDC/local/$DIDC:$DIDC:$NAMEC\$"
+   assertStdoutGrep --matches=1 "^sid://$SIDD/local/$DIDD:$DIDD:$NAMED\$"
+   assert_status_all_servald_servers running
+}
+
+interface_up() {
+  grep "Interface .* is up" $instance_servald_log || return 1
+  return 0
+}
+
+start_routing_instance() {
+   start_servald_server
+   wait_until interface_up
+}
+
+configure_node() {
+   executeOk_servald config \
+      set server.interface_path "$SERVALD_VAR" \
+      set rhizome.enable No \
+      set log.console.show_pid on \
+      set log.console.show_time on \
+      set debug.mdprequests Yes \
+      set debug.overlayframes Yes \
+      set debug.overlayinterfaces Yes \
+      set debug.linkstate Yes \
+      set interfaces.0.file dummy1 \
+      set interfaces.0.type wifi \
+      set interfaces.0.socket_type file \
+      set interfaces.0.broadcast.send off \
+      set interfaces.0.broadcast.drop on \
+      set interfaces.0.broadcast.reachable_timeout_ms 10000 \
+      set interfaces.0.unicast.route off \
+      set interfaces.0.default_route 1 \
+      set interfaces.0.dummy_address 10.0.${instance_number}.1 \
+      set interfaces.0.dummy_netmask 255.255.255.0
+}
+
+setup_routing() {
+   setup_servald
+   assert_no_servald_processes
+   foreach_instance +A +B +C create_single_identity
+   >$SERVALD_VAR/dummy1
+   foreach_instance +A +B +C \
+      configure_node
+   set_instance +A
+   executeOk_servald config \
+      set dna.helper.executable "$servald_build_root/directory_service" \
+      set debug.dnahelper on
+   foreach_instance +B +C \
+      executeOk_servald config \
+         set directory.service $SIDA \
+         set hosts.$SIDA.address 10.0.1.1
+   set_instance +A
+   start_routing_instance
+   wait_until grep "DNAHELPER got STARTED ACK" $instance_servald_log
+   foreach_instance +B +C start_routing_instance
+}
+
+doc_routing="Ping via relay node"
+test_routing() {
+   foreach_instance +B +C \
+      wait_until sent_directory_request
+   set_instance +A
+   wait_until is_published $SIDB
+   wait_until is_published $SIDC
+   set_instance +B
+   executeOk_servald route print
+   assertStdoutGrep --matches=1 "^$SIDA:UNICAST:"
+   assertStdoutGrep --matches=0 "^$SIDC:"
+   executeOk_servald dna lookup "$DIDC"
+   assertStdoutLineCount '==' 3
+   assertStdoutGrep --matches=1 "^sid://$SIDC/local/$DIDC:$DIDC:$NAMEC\$"
+   set_instance +C
+   executeOk_servald route print
+   assertStdoutGrep --matches=1 "^$SIDA:UNICAST:"
+   assertStdoutGrep --matches=0 "^$SIDB:"
+   executeOk_servald dna lookup "$DIDB"
+   assertStdoutLineCount '==' 3
+   assertStdoutGrep --matches=1 "^sid://$SIDB/local/$DIDB:$DIDB:$NAMEB\$"
+   executeOk_servald mdp ping $SIDB 3
+   tfw_cat --stdout --stderr
+   executeOk_servald route print
+   tfw_cat --stdout
+   set_instance +B
+   executeOk_servald route print
+   tfw_cat --stdout
+   assert_status_all_servald_servers running
+}
+
+runTests "$@"

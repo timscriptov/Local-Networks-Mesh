@@ -1,0 +1,59 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdk 32
+
+    defaultConfig {
+        applicationId "org.servalproject"
+        minSdkVersion 14
+        targetSdkVersion 19
+        versionCode 2371
+        versionName "0.93"
+        /*externalNativeBuild {
+            ndkBuild {
+                abiFilters = ["armeabi-v7a"]
+                arguments += "-j${Runtime.runtime.availableProcessors()}".toString()
+            }
+        }*/
+    }
+
+    /*externalNativeBuild {
+        ndkBuild {
+            path = 'src/main/jni/Android.mk'
+        }
+    }*/
+
+    buildTypes {
+        debug {
+            buildConfigField "String", "ManifestId", "\"2BD64BF074A8B0250C72DA7446D580F4D69980C3B13587EAC932E63C256AFF12\"";
+        }
+        release {
+            minifyEnabled false
+            proguardFiles.add(file('proguard-android.txt'))
+            buildConfigField "String", "ManifestId", "\"2BD64BF074A8B0250C72DA7446D580F4D69980C3B13587EAC932E63C256AFF12\"";
+        }
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    ndkVersion '21.4.7075529'
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    testImplementation 'junit:junit:4.13.2'
+    implementation project(':expansionpanel')
+    //noinspection GradleDependency
+    implementation 'commons-io:commons-io:2.3'
+    //implementation 'com.google.android.gms:play-services-location:16.0.0'
+    //implementation 'com.android.support:support-v4:28.0.0'
+    implementation 'com.android.support:cardview-v7:26.0.1'
+    implementation 'com.android.support:appcompat-v7:26.0.1'
+    implementation 'com.android.support:design:26.0.1'
+}

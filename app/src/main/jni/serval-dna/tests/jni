@@ -1,0 +1,175 @@
+#!/bin/bash
+
+# Tests for Serval DNA JNI entry points.
+#
+# Copyright 2012-2014 Serval Project Inc.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+source "${0%/*}/../testframework.sh"
+source "${0%/*}/../testdefs.sh"
+source "${0%/*}/../testdefs_java.sh"
+
+setup() {
+   setup_servald
+   executeOk_servald config \
+	set debug.verbose 1 \
+	set log.console.level debug
+   assert_echo_works
+   compile_java_classes
+   setup_servald_so
+}
+
+# Make sure that the normal echo command-line works, without JNI.
+assert_echo_works() {
+   executeOk $servald echo -e 'Hello,\ttab' 'world\0!'
+   assertStdoutIs -e 'Hello,\ttab\nworld\0!\n'
+}
+
+doc_Echo="Serval JNI echo Hello world"
+test_Echo() {
+   executeJavaOk org.servalproject.test.ServalDTests 'echo' '-e' 'Hello,\ttab' 'world\0!'
+   assertStdoutIs -e 'Hello,\ttab world\0! \n'
+}
+
+doc_Delim="Serval non-JNI output delimiter environment variable"
+setup_Delim() {
+   setup_servald
+   assert_echo_works
+}
+test_Delim() {
+   export SERVALD_OUTPUT_DELIMITER=:::
+   executeOk $servald echo 'Hello,' 'world!'
+   assertStdoutIs 'Hello,:::world!:::'
+}
+
+doc_Repeat="Serval JNI repeated calls in same process"
+test_Repeat() {
+   executeJavaOk org.servalproject.test.ServalDTests repeat 50 'echo' 'Hello,' 'world!'
+   assertStdoutLineCount '==' 50
+   assertStdoutGrep --matches=50 '^Hello, world! $'
+}
+
+doc_NullArg="Serval JNI null arguments dont throw exception"
+test_NullArg() {
+   executeJavaOk org.servalproject.test.ServalDTests 'echo' '(null)'
+   tfw_cat --stdout --stderr
+}
+
+doc_help="Serval JNI returns help text"
+test_help() {
+   executeJavaOk org.servalproject.test.ServalDTests 'help'
+   assertStdoutGrep 'Serval DNA version '
+}
+
+doc_PeerList="Serval JNI get peer details"
+setup_PeerList() {
+   configure_servald_server() {
+      add_servald_interface
+   }
+   setup
+   foreach_instance +A +B create_single_identity
+   start_servald_instances +A +B
+   set_instance +A
+}
+test_PeerList() {
+   executeJavaOk org.servalproject.test.CommandLine 'peers'
+   assertStdoutGrep "$SIDB"
+   tfw_cat --stdout
+}
+teardown_PeerList() {
+   stop_all_servald_servers
+   kill_all_servald_processes
+   assert_no_servald_processes
+   report_all_servald_servers
+}
+
+doc_DnaLookup="Serval JNI DNA Lookup"
+setup_DnaLookup() {
+   configure_servald_server() {
+      add_servald_interface
+      executeOk_servald config \
+         set debug.mdprequests on \
+         set mdp.enable_inet on
+   }
+   setup
+   foreach_instance +A +B create_single_identity
+   start_servald_instances +A +B
+   set_instance +A
+}
+test_DnaLookup() {
+   executeJavaOk --timeout=10 org.servalproject.test.CommandLine 'lookup'
+   tfw_cat --stdout --stderr
+   assertStdoutGrep "$SIDB"
+}
+teardown_DnaLookup() {
+   stop_all_servald_servers
+   kill_all_servald_processes
+   assert_no_servald_processes
+   report_all_servald_servers
+}
+
+doc_serviceDiscovery="Serval JNI discover network services by name"
+listen_service() {
+   executeOk_servald --timeout=20 msp listen --once --service=test_name 512 <<EOF
+Hi!
+EOF
+   tfw_cat --stderr
+}
+setup_serviceDiscovery() {
+   configure_servald_server() {
+      add_servald_interface
+      executeOk_servald config \
+         set debug.mdprequests on \
+         set mdp.enable_inet on \
+         set log.console.level debug
+   }
+   setup
+   set_instance +A
+   foreach_instance +A +B create_single_identity
+   start_servald_instances +A +B
+   set_instance +B
+   fork %service listen_service
+   set_instance +A
+}
+test_serviceDiscovery() {
+   executeJavaOk --timeout=10 org.servalproject.test.CommandLine 'service' 'test_name.*'
+   assertStdoutGrep "$SIDB"
+   assertStdoutGrep "\<test_name\.msp\.port=512\>"
+   tfw_cat --stdout --stderr
+   executeOk_servald --timeout=20 msp connect $SIDB 512 <<EOF
+Hi!
+EOF
+   fork_wait %service
+}
+teardown_serviceDiscovery() {
+   stop_all_servald_servers
+   kill_all_servald_processes
+   assert_no_servald_processes
+   report_all_servald_servers
+}
+
+doc_servaldThread="Start servald in a JVM thread"
+setup_servaldThread() {
+   setup
+   set_instance +A
+   create_single_identity
+}
+test_servaldThread() {
+   executeJavaOk --timeout=10 org.servalproject.test.CommandLine 'server'
+   tfw_cat --stdout --stderr
+}
+
+runTests "$@"

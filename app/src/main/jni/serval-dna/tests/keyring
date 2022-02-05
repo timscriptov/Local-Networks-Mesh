@@ -1,0 +1,504 @@
+#!/bin/bash
+
+# Tests for Serval keyring
+#
+# Copyright 2012-2013 Serval Project, Inc.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+source "${0%/*}/../testframework.sh"
+source "${0%/*}/../testdefs.sh"
+
+shopt -s extglob
+
+setup() {
+    setup_servald
+    setup_instances +A
+    set_instance +A
+}
+
+teardown_servald() {
+   kill_all_servald_processes
+   assert_no_servald_processes
+   report_servald_server
+}
+
+setup_instances() {
+   for arg; do
+      set_instance $arg
+      executeOk_servald config \
+         set log.console.level debug \
+         set debug.keyring on
+      executeOk_servald keyring list
+      assert_keyring_list 0
+   done
+}
+
+doc_KeyringCreate="Create keyring destroys existing keys"
+test_KeyringCreate() {
+    executeOk_servald keyring add ''
+    executeOk_servald keyring add ''
+    executeOk_servald keyring list
+    assert_keyring_list 2
+    executeOk_servald keyring create
+    executeOk_servald keyring list
+    assert_keyring_list 0
+}
+
+doc_DidName="Create an identity & set the name and number"
+test_DidName() {
+    executeOk_servald keyring add ''
+    assertStdoutGrep --matches=1 "^sid:"
+    assertStdoutLineCount '==' 1
+    extract_stdout_keyvalue SID sid "$rexp_sid"
+    executeOk_servald keyring set did "$SID" '123456' 'Display Name'
+    assertStdoutGrep --matches=1 "^sid:$SID\$"
+    assertStdoutGrep --matches=1 "^did:123456\$"
+    assertStdoutGrep --matches=1 "^name:Display Name\$"
+    assertStdoutLineCount '==' 3
+    executeOk_servald keyring list
+    assertStdoutGrep --stderr --matches=1 "^$SID:123456:Display Name\$"
+}
+
+keyring_set_tag() {
+    executeOk_servald keyring set tag "$1" "$2" "$3"
+    assertStdoutGrep --matches=1 "^sid:$1\$"
+    assertStdoutGrep --matches=1 "^$2:$3\$"
+}
+
+doc_SetTag="Set a named tag against an identity"
+test_SetTag() {
+    executeOk_servald keyring add ''
+    assertStdoutGrep --matches=1 "^sid:"
+    assertStdoutLineCount '==' 1
+    extract_stdout_keyvalue SID sid "$rexp_sid"
+    keyring_set_tag "$SID" 'tag1' 'First Value'
+    assertStdoutLineCount '==' 2
+    keyring_set_tag "$SID" 'tag2' 'Second Value'
+    executeOk_servald keyring set tag "$SID" 'tag2' 'Second Value'
+    assertStdoutGrep --matches=1 "^tag1:First Value\$"
+    assertStdoutLineCount '==' 3
+    keyring_set_tag "$SID" 'tag1' 'Third Value'
+    assertStdoutGrep --matches=1 "^tag2:Second Value\$"
+    assertStdoutLineCount '==' 3
+    executeOk_servald keyring dump --secret
+    tfw_cat --stdout
+}
+
+doc_Pinless="No keyring PIN with PIN-less identities"
+test_Pinless() {
+    executeOk_servald keyring add ''
+    executeOk_servald keyring list
+    assert_keyring_list 1
+    executeOk_servald keyring add ''
+    executeOk_servald keyring list
+    assert_keyring_list 2
+    executeOk_servald keyring add ''
+    executeOk_servald keyring list
+    assert_keyring_list 3
+}
+
+doc_IdentityPins="No keyring PIN with identity PINs"
+test_IdentityPins() {
+    executeOk_servald keyring add 'one'
+    executeOk_servald keyring list
+    assert_keyring_list 0
+    executeOk_servald keyring list --entry-pin 'one'
+    assert_keyring_list 1
+    executeOk_servald keyring add 'two'
+    executeOk_servald keyring list
+    assert_keyring_list 0
+    executeOk_servald keyring list --entry-pin 'one'
+    assert_keyring_list 1
+    executeOk_servald keyring list --entry-pin 'one' --entry-pin 'two'
+    assert_keyring_list 2
+    executeOk_servald keyring add 'three'
+    executeOk_servald keyring list
+    assert_keyring_list 0
+    executeOk_servald keyring list --entry-pin 'one'
+    assert_keyring_list 1
+    executeOk_servald keyring list --entry-pin 'one' --entry-pin 'two'
+    assert_keyring_list 2
+    executeOk_servald keyring list --entry-pin 'one' --entry-pin 'two' --entry-pin 'three'
+    assert_keyring_list 3
+    executeOk_servald keyring list --entry-pin 'two' --entry-pin 'three'
+    assert_keyring_list 2
+    executeOk_servald keyring list --entry-pin 'three'
+    assert_keyring_list 1
+}
+
+doc_KeyringPinIdentityPinless="Keyring PIN with PIN-less identities"
+test_KeyringPinIdentityPinless() {
+    executeOk_servald keyring add --keyring-pin=hello ''
+    executeOk_servald keyring list --keyring-pin=hello
+    assert_keyring_list 1
+    executeOk_servald keyring add --keyring-pin=hello ''
+    executeOk_servald keyring list --keyring-pin=hello
+    assert_keyring_list 2
+    executeOk_servald keyring add --keyring-pin=hello ''
+    executeOk_servald keyring list --keyring-pin=hello
+    assert_keyring_list 3
+    executeOk_servald keyring list
+    assert_keyring_list 0
+}
+
+doc_KeyringPinIdentityPin="Keyring PIN with identity PINs"
+test_KeyringPinIdentityPin() {
+    executeOk_servald keyring add --keyring-pin=yellow 'duck'
+    executeOk_servald keyring add --keyring-pin=yellow 'chicken'
+    executeOk_servald keyring list
+    assert_keyring_list 0
+    executeOk_servald keyring list --keyring-pin=yellow
+    assert_keyring_list 0
+    executeOk_servald keyring list --keyring-pin=yellow --entry-pin=duck
+    assert_keyring_list 1
+    executeOk_servald keyring list --keyring-pin=yellow --entry-pin=chicken
+    assert_keyring_list 1
+    executeOk_servald keyring list --keyring-pin=yellow --entry-pin=duck --entry-pin=chicken
+    assert_keyring_list 2
+    executeOk_servald keyring list --entry-pin=duck --entry-pin=chicken
+    assert_keyring_list 0
+}
+
+doc_KeyringAutoCreate="Starting a server with no keyring creates a valid identity"
+test_KeyringAutoCreate() {
+    start_servald_server
+    executeOk_servald keyring list
+    assert_keyring_list 1
+}
+finally_KeyringAutoCreate() {
+    stop_servald_server
+}
+teardown_KeyringAutoCreate() {
+   teardown_servald
+}
+
+doc_KeyringPinServer="Start daemon with a keyring PIN"
+setup_KeyringPinServer() {
+   setup
+   create_single_identity --keyring-pin=yellow
+}
+test_KeyringPinServer() {
+   start_servald_server --keyring-pin=yellow
+   executeOk_servald id self
+   unpack_stdout_list X
+   assert --stdout --stderr [ $XNROWS -eq 1 ]
+   assert --stdout --stderr [ ${XSID[0]} = $SIDA ]
+}
+finally_KeyringPinServer() {
+   stop_servald_server
+}
+teardown_KeyringPinServer() {
+   teardown_servald
+}
+
+doc_EntryPinServer="Start daemon with an entry PIN"
+setup_EntryPinServer() {
+   setup
+   create_single_identity --entry-pin=yodel
+}
+test_EntryPinServer() {
+   start_servald_server --entry-pin=yodel
+   executeOk_servald id self
+   unpack_stdout_list X
+   assert --stdout --stderr [ $XNROWS -eq 1 ]
+   assert --stdout --stderr [ ${XSID[0]} = $SIDA ]
+}
+finally_EntryPinServer() {
+   stop_servald_server
+}
+teardown_EntryPinServer() {
+   teardown_servald
+}
+
+doc_KeyringEntryPinServer="Start daemon with a keyring and an entry PIN"
+setup_KeyringEntryPinServer() {
+   setup
+   create_single_identity --keyring-pin=yellow --entry-pin=yodel
+}
+test_KeyringEntryPinServer() {
+   start_servald_server --keyring-pin=yellow --entry-pin=yodel
+   executeOk_servald id self
+   unpack_stdout_list X
+   assert --stdout --stderr [ $XNROWS -eq 1 ]
+   assert --stdout --stderr [ ${XSID[0]} = $SIDA ]
+}
+finally_KeyringKeyringPinServer() {
+   stop_servald_server
+}
+teardown_KeyringKeyringPinServer() {
+   teardown_servald
+}
+
+doc_KeyringEntryPinServer="Start daemon, unlock and lock identities"
+setup_KeyringEntryPinServer() {
+   setup
+   executeOk_servald config set debug.mdprequests on
+   create_single_identity
+   executeOk_servald keyring add 'one'
+   extract_stdout_keyvalue ONE sid "$rexp_sid"
+   executeOk_servald keyring add 'two'
+   extract_stdout_keyvalue TWOA sid "$rexp_sid"
+   executeOk_servald keyring add 'two'
+   extract_stdout_keyvalue TWOB sid "$rexp_sid"
+   start_servald_server
+}
+test_KeyringEntryPinServer() {
+   executeOk_servald id self
+   assertStdoutLineCount == 3
+   assertStdoutGrep --matches=1 --fixed-strings "$SIDA"
+   executeOk_servald id enter pin 'one'
+   executeOk_servald id list
+   assertStdoutLineCount == 4
+   assertStdoutGrep --matches=1 --fixed-strings "$SIDA"
+   assertStdoutGrep --matches=1 --fixed-strings "$ONE"
+   executeOk_servald id enter pin 'two'
+   executeOk_servald id list
+   assertStdoutLineCount == 6
+   assertStdoutGrep --matches=1 --fixed-strings "$SIDA"
+   assertStdoutGrep --matches=1 --fixed-strings "$ONE"
+   assertStdoutGrep --matches=1 --fixed-strings "$TWOA"
+   assertStdoutGrep --matches=1 --fixed-strings "$TWOB"
+   executeOk_servald id relinquish pin 'one'
+   executeOk_servald id list
+   assertStdoutLineCount == 5
+   assertStdoutGrep --matches=1 --fixed-strings "$SIDA"
+   assertStdoutGrep --matches=1 --fixed-strings "$TWOA"
+   assertStdoutGrep --matches=1 --fixed-strings "$TWOB"
+   executeOk_servald id relinquish sid "$TWOB"
+   tfw_cat --stderr
+   executeOk_servald id list
+   assertStdoutLineCount == 4
+   assertStdoutGrep --matches=1 --fixed-strings "$SIDA"
+   assertStdoutGrep --matches=1 --fixed-strings "$TWOA"
+}
+teardown_KeyringEntryPinServer() {
+   teardown_servald
+}
+
+doc_ListTags="Search for unlocked identities by their tags & values"
+setup_ListTags() {
+   setup
+   executeOk_servald keyring add
+   extract_stdout_keyvalue ONE sid "$rexp_sid"
+   keyring_set_tag "$ONE" 'tag1' 'First Value'
+   executeOk_servald keyring add
+   extract_stdout_keyvalue TWO sid "$rexp_sid"
+   keyring_set_tag "$TWO" 'tag1' 'Second Value'
+   executeOk_servald keyring add
+   extract_stdout_keyvalue THREE sid "$rexp_sid"
+   keyring_set_tag "$THREE" 'tag2' 'Third Value'
+   start_servald_server
+}
+test_ListTags() {
+   executeOk_servald id list
+   assertStdoutLineCount == 5
+   assertStdoutGrep --fixed-strings "$ONE"
+   assertStdoutGrep --fixed-strings "$TWO"
+   assertStdoutGrep --fixed-strings "$THREE"
+   executeOk_servald id list 'tag1'
+   assertStdoutLineCount == 4
+   assertStdoutGrep --fixed-strings "$ONE"
+   assertStdoutGrep --fixed-strings "$TWO"
+   executeOk_servald id list 'tag1' 'First Value'
+   assertStdoutLineCount == 3
+   assertStdoutGrep --fixed-strings "$ONE"
+}
+teardown_ListTags() {
+   teardown_servald
+}
+
+doc_Load="Load keyring entries from a keyring dump"
+setup_Load() {
+   setup_servald
+   setup_instances +A +B
+   set_instance +A
+   executeOk_servald keyring add ''
+   executeOk_servald keyring add ''
+   executeOk_servald keyring dump --secret dA
+   set_instance +B
+   executeOk_servald keyring add ''
+   executeOk_servald keyring dump --secret dB
+   set_instance +A
+   tfw_cat dA dB
+   assert ! cmp dA dB
+}
+test_Load() {
+   set_instance +B
+   executeOk_servald keyring load dA
+   tfw_cat --stderr
+   executeOk_servald keyring dump --secret dBA
+   tfw_cat dBA
+   assert [ $(cat dBA | wc -l) -eq $(( $(cat dA | wc -l) + $(cat dB | wc -l) )) ]
+   while read line; do
+      assertGrep --fixed-strings dBA "${line#[0-9]}"
+   done < dA
+   while read line; do
+      assertGrep --fixed-strings dBA "${line#[0-9]}"
+   done < dB
+   set_instance +A
+   executeOk_servald keyring load dB
+   tfw_cat --stderr
+   executeOk_servald keyring dump --secret dAB
+   assert cmp dAB dBA
+}
+
+doc_LoadAtomic="Load is atomic: all entries are loaded or none"
+setup_LoadAtomic() {
+   setup_Load
+   echo blah >>dA
+}
+test_LoadAtomic() {
+   set_instance +B
+   execute --exit-status=255 $servald keyring load dA
+   executeOk_servald keyring dump --secret dB2
+   tfw_cat dB2
+   assert cmp dB2 dB
+}
+
+doc_LoadDuplicates="Load de-duplicates keyring entries by SID"
+setup_LoadDuplicates() {
+   setup
+   executeOk_servald keyring add ''
+   executeOk_servald keyring dump --secret dA
+   tfw_cat dA
+}
+test_LoadDuplicates() {
+   executeOk_servald keyring load dA
+   tfw_cat --stderr
+   executeOk_servald keyring dump --secret dAA
+   tfw_cat dAA
+   assert cmp dA dAA
+}
+
+doc_LoadPins="Load keyring entries with PIN arguments"
+setup_LoadPins() {
+   setup_servald
+   setup_instances +A +B
+   set_instance +A
+   executeOk_servald keyring add ''
+   executeOk_servald keyring add ''
+   executeOk_servald keyring add ''
+   executeOk_servald keyring dump --secret dA
+   set_instance +B
+   executeOk_servald keyring add ''
+   executeOk_servald keyring dump --secret dB
+   set_instance +A
+   tfw_cat dA dB
+   assert ! cmp dA dB
+}
+test_LoadPins() {
+   set_instance +B
+   executeOk_servald keyring load --keyring-pin=krpin dA pin1 '' pin3
+   executeOk_servald keyring dump --secret dBA
+   tfw_cat dBA
+   assert cmp dB dBA
+   tfw_cat --stderr
+   for pin in '' pin1 pin3; do
+      executeOk_servald keyring dump --keyring-pin=krpin --entry-pin="$pin" --secret dBA
+      tfw_cat --stderr dBA
+      let n=0
+      while read line; do
+         case "$pin=$line" in
+         pin1=0:* | *=1:* | pin3=2:* )
+            assertGrep --fixed-strings dBA "${line#[0-9]}"
+            let ++n
+            ;;
+         esac
+      done < dA
+      assert [ $(cat dBA | wc -l) -eq $n ]
+   done
+}
+
+doc_CompatibleBack1="Can read old keyring file (1)"
+setup_CompatibleBack1() {
+    setup_servald
+    executeOk_servald config \
+      set log.console.level debug \
+      set debug.keyring on
+    assert mkdir -p "$SERVALINSTANCE_PATH"
+    assert cp "${TFWSOURCE%/*}/testdata/serval.keyring-1" "$SERVALINSTANCE_PATH/serval.keyring"
+}
+test_CompatibleBack1() {
+    executeOk_servald keyring dump --secret
+    assertStdoutLineCount '==' 11
+    assertStdoutGrep "^0: type=.*(CRYPTOBOX).*pub=6EE9BCA4AE1A264D18F42C18EF910915F98F0C5D9ECD853ECB1547B752119F05\b"
+    assertStdoutGrep "^0: type=.*(CRYPTOBOX).*sec=3611C4CC6BC7A167088492AD021103048C78F16AC22724B06B96A3E865163137\b"
+    assertStdoutGrep "^0: type=.*(CRYPTOSIGN).*pub=DA75D0A0EFCC75A9CCA634C2FC36EC19416B0CDE2A014520F911B95D1DB6224A\b"
+    assertStdoutGrep "^0: type=.*(CRYPTOSIGN).*sec=A90608CE5135D54CDBA922426D425F9D5494C8DB83D658EE518D88BCDAF04B1EDA75D0A0EFCC75A9CCA634C2FC36EC19416B0CDE2A014520F911B95D1DB6224A\b"
+    assertStdoutGrep "^0: type=.*(DID).*DID=\"555001234\""
+    assertStdoutGrep "^0: type=.*(DID).*Name=\"Jones\""
+    assertStdoutGrep "^0: type=.*(RHIZOME).*sec=6FBCD69A8DE983324C414F8B5BA83646EF4421AA877BB06F18AFA78EEC42A4BC\b"
+    assertStdoutGrep "^1: type=.*(CRYPTOBOX).*pub=C10C91D24BF210DD6733ED2424B4509E6CC4402D34055B6D29F7A778701AA542\b"
+    assertStdoutGrep "^1: type=.*(CRYPTOBOX).*sec=9D22FF754D90971B062A26BAA1D2E95C03B67688B3C71334C3512DB8FA996570\b"
+    assertStdoutGrep "^1: type=.*(CRYPTOSIGN).*pub=9F40922AD9435B1AD2880442B43D32CC345CAAFF13599DC241C13E421A4D672A\b"
+    assertStdoutGrep "^1: type=.*(CRYPTOSIGN).*sec=648F3171A612F82ED01BA1475AD9F538F97C1D95067D1D9F7F324B8F9C0489289F40922AD9435B1AD2880442B43D32CC345CAAFF13599DC241C13E421A4D672A\b"
+    assertStdoutGrep "^1: type=.*(DID).*DID=\"55500000\""
+    assertStdoutGrep "^1: type=.*(DID).*Name=\"Smith\""
+    assertStdoutGrep "^1: type=.*(RHIZOME).*sec=E78E7F80CCEC0179A07E1DECC9D6C3C89089A9FD3787CF5273FD0F8E9CE62780\b"
+    assertStdoutGrep "^2: type=.*(CRYPTOBOX).*pub=EEBF3AC19E7EE58722A0F6D4A4D5894A72F5C71030C3399FE75808DCF6C6254B\b"
+    assertStdoutGrep "^2: type=.*(CRYPTOBOX).*sec=5822F44BF118F7A533B74046A400FA8C83A6B69EDD0166D8175D0B70267A2CA1\b"
+    assertStdoutGrep "^2: type=.*(CRYPTOSIGN).*pub=13A4B69DE4D4A1D89DB22E1D433B0C7DEB2E9C86A2FD98D9F689B7EDEFB64E20\b"
+    assertStdoutGrep "^2: type=.*(CRYPTOSIGN).*sec=2B221014CED25245A181B5164030D7823B8FC288DE724CAC029CE6A5E195A12713A4B69DE4D4A1D89DB22E1D433B0C7DEB2E9C86A2FD98D9F689B7EDEFB64E20\b"
+    assertStdoutGrep "^2: type=.*(RHIZOME).*sec=4483DF66540740736A05055A96D8C8B84F05D52808380DD52462B8EA5CCAB0D3\b"
+    assertStdoutGrep --matches=0 "^2: type=.*(DID)"
+    assertStdoutGrep --matches=0 "^3:"
+}
+
+doc_KeyringPathEnv="Use keyring specified by environment variable"
+setup_KeyringPathEnv() {
+    setup
+    executeOk_servald keyring add ''
+    executeOk_servald keyring list
+    assert_keyring_list 1
+    orig="$(replayStdout)"
+}
+test_KeyringPathEnv() {
+    export SERVALD_KEYRING_PATH="$PWD/keyring"
+    executeOk_servald keyring list
+    assert_keyring_list 0
+    assert --message="created 'keyring' file" [ -s keyring ]
+    executeOk_servald keyring add ''
+    executeOk_servald keyring list
+    assert_keyring_list 1
+    assert [ "$(replayStdout)" != "$orig" ]
+    unset SERVALD_KEYRING_PATH
+    executeOk_servald keyring list
+    assert_keyring_list 1
+    assert [ "$(replayStdout)" == "$orig" ]
+}
+
+doc_ReadOnlyEnv="Read-only keyring environment variable"
+setup_ReadOnlyEnv() {
+    setup
+    executeOk_servald keyring add ''
+    executeOk_servald keyring list
+    assert_keyring_list 1
+    orig="$(replayStdout)"
+}
+test_ReadOnlyEnv() {
+    export SERVALD_KEYRING_READONLY="true"
+    execute --exit-status=255 $servald keyring add ''
+    tfw_cat --stderr
+    executeOk_servald keyring list
+    assert_keyring_list 1
+    assert [ "$(replayStdout)" == "$orig" ]
+    export SERVALD_KEYRING_READONLY="false"
+    executeOk_servald keyring add ''
+    executeOk_servald keyring list
+    assert_keyring_list 2
+}
+
+runTests "$@"

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+ * Copyright (C) 2011,2012 The Serval Project
+ * 
+ * This file is part of Serval Software (http://www.servalproject.org)
+ * 
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU
+  General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ -->
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <!-- Serval Phone Calls -->
+    <string name="in_call">In Call</string>
+    <string name="call_ended">Call Ended</string>
+    <string name="outgoing_call">Calling</string>
+    <string name="incoming_call">Incoming Call</string>
+    <string name="security_status">NOT SECURED</string>
+    <string name="contact_name">Test Name</string><!-- from contact book else string/unknown_contact -->
+    <string name="phone_number">55566666</string><!-- determined by Serval Mesh -->
+    <string name="caller_image">Caller Image</string>
+
+    <!-- Serval MeshMS API Stuff -->
+    <string name="system_permission_meshms_send_label">Send MeshMS messages</string>
+    <string name="system_permission_meshms_send_description">Allows an application to send MeshMS messages</string>
+
+    <!-- Serval Items Content Provider -->
+
+    <!-- Messages -->
+    <string name="messages_list_ui_contact_image_description">Contact Photo</string>
+    <string name="messages_list_header">Messages</string>
+    <string name="new_message_ui_btn_send_message">Send</string>
+    <string name="show_conversation_hint_message">Type message</string>
+
+    <!-- contacts strings -->
+    <string name="contacts_ui_btn_lookup_peer">List Phones\nOn The Mesh</string>
+    <string name="contacts_ui_btn_lookup_contacts">Show Android\nContact List</string>
+
+    <!-- third party control service-->
+    <string name="system_permission_control_label">Start and Stop the Serval Mesh</string>
+
+    <!-- Wifi state strings -->
+    <string name="wifi_enabling">Turning On</string>
+    <string name="wifi_enabled">On</string>
+    <string name="wifi_disabling">Turning Off</string>
+    <string name="wifi_disabled">Off</string>
+    <string name="wifi_error">Error</string>
+</resources>

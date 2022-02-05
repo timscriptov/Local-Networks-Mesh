@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+ * Copyright (C) 2011,2012 The Serval Project
+ * 
+ * This file is part of Serval Software (http://www.servalproject.org)
+ * 
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU
+  General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ -->
+<!-- @author Romana Challans <romana@servalproject.org> -->
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <!-- Serval General -->
+    <string name="app_name">Serval Mesh</string>
+
+    <!-- Serval Main -->
+    <!-- These must say Serval Mesh, not Serval Network, because Serval provides the protocol, not the infrastructure.
+    This has important implications for telecommunications law in various countries. -->
+    <string name="callLabel">Call</string>
+    <string name="messageLabel">Messages</string>
+    <string name="contactsLabel">Contacts</string>
+    <string name="mapsLabel">Maps</string>
+    <string name="sharingLabel">Share Files</string>
+    <string name="servalLabel">Share Us</string>
+    <string name="settingsLabel">Settings</string>
+    <string name="powerLabel">Power</string>
+    <string name="helpLabel">Help</string>
+    <string name="connectLabel">Connect</string>
+
+    <string name="state_installing">Installing&#8230;</string>
+    <string name="state_upgrading">Upgrading&#8230;</string>
+    <string name="state_starting">Starting&#8230;</string>
+    <string name="state_installed">Installed</string>
+    <string name="state_broken">Broken!</string>
+
+
+    <!-- Serval Buttons -->
+    <string name="btnwizard">SETUP WIZARD</string>
+    <string name="btnPhOk">OK</string>
+
+    <!-- Serval Phone Set -->
+    <string name="cancelcall">Cancel</string>
+    <string name="searchpeers">Search</string>
+    <string name="callcellular">Call via cellular network</string>
+
+    <!-- Serval General -->
+    <string name="setphone">Enter Phone No.</string>
+    <string name="setname">Display Name.</string>
+
+    <!-- Serval About -->
+
+    <!-- Serval Donations -->
+
+    <!-- Serval Instruction -->
+    <string name="phoneInstr">Please enter your phone number.\nIt cannot match an emergency number, \nand must be at least 5 digits long.</string>
+
+    <!-- Serval Security -->
+
+    <!-- Serval Maps -->
+
+
+    <!--  Wifi setup / warnings -->
+    <string name="openhotspottitle">Portable Wi-Fi hotspot</string>
+    <string name="openhotspotmessage">Starting an open hotspot will allow other users to consume your cellular data and may cost you money.</string>
+    <string name="adhoctesttitle">HERE BE DRAGONS!</string>
+    <string name="adhoctestmessage">Connecting to an Ad Hoc Wi-Fi network is not supported by Android. Doing this requires root permission, is unlikely to work and has the potential to damage your device and void your warranty.</string>
+    <string name="testbutton">Test</string>
+    <string name="adhocconnectmessage">Channel: %2$d\nAddress: %3$s</string>
+    <string name="connectbutton">Connect</string>
+
+    <plurals name="peers_label">
+        <item quantity="one">%d Peer</item>
+        <item quantity="other">%d Peers</item>
+    </plurals>
+    <string name="server_off">Off</string>
+    <string name="server_starting">Starting</string>
+    <string name="server_idle">Idle</string>
+    <string name="server_nopeers">No Peers</string>
+
+    <string name="connecting_to">Connecting to %1$s...</string>
+    <string name="connected_to">Connected to %1$s.</string>
+    <string name="ssid_none">[Hidden network]</string>
+    <plurals name="open_networks">
+        <item quantity="one">%d open network.</item>
+        <item quantity="other">%d open networks.</item>
+    </plurals>
+    <plurals name="known_networks">
+        <item quantity="one">%d known network.</item>
+        <item quantity="other">%d known networks.</item>
+    </plurals>
+    <plurals name="serval_networks">
+        <item quantity="one">%d Serval network.</item>
+        <item quantity="other">%d Serval networks.</item>
+    </plurals>
+
+    <string name="wifi_client">Wi-Fi</string>
+    <string name="hotspot">Portable Wi-Fi hotspot</string>
+    <string name="adhoc">Ad Hoc Mesh</string>
+    <string name="bluetooth">Bluetooth</string>
+
+    <string name="bluetooth_not_discoverable">On, but not discoverable</string>
+
+    <string name="network_target">Queued</string>
+    <string name="hotspot_restoring">Attempting to restore your hotspot configuration</string>
+
+    <string name="meshms_delivered">delivered</string>
+    <string name="meshms_read">read</string>
+    <string name="version">1.0</string>
+    <string name="manifest_id">2BD64BF074A8B0250C72DA7446D580F4D69980C3B13587EAC932E63C256AFF12</string>
+    <string name="ongoing_call">Serval Phone Call</string>
+
+    <string name="share_location">Share</string>
+    <string name="copy_location">Copy</string>
+    <string name="view_location">View</string>
+    <string name="copied">Copied to clipboard</string>
+    <string name="clipboard_error">Failed to copy text to clipboard</string>
+    <string name="getting_location">Getting location…</string>
+    <string name="share_location_via">Share location via</string>
+    <string name="view_location_via">View location via</string>
+
+    <string name="turn_on_GPS">Turn on GPS</string>
+    <string name="permission_denied">GPS permission denied</string>
+
+    <string name="accuracy">Accuracy</string>
+    <string name="latitude">Latitude</string>
+    <string name="longitude">Longitude</string>
+
+    <string name="choose_link">Choose a link type</string>
+
+    <string name="always_ask">Ask me every time</string>
+    <string name="googlemaps" translatable="false">Google Maps</string>
+    <string name="openstreetmap" translatable="false">OpenStreetMap</string>
+    <string name="geouri" translatable="false">GeoURI</string>
+    <string name="decimal">Decimal</string>
+    <string name="link_type">Link type</string>
+
+    <string name="altitude">Altitude</string>
+    <string name="speed">Speed</string>
+    <string name="settings">Settings</string>
+
+    <string name="stream_default">Suggests using the default stream type</string>
+    <string name="stream_voice_call">Used to identify the volume of audio streams for phone calls</string>
+    <string name="stream_system">Used to identify the volume of audio streams for system sounds</string>
+    <string name="stream_ring">Used to identify the volume of audio streams for the phone ring</string>
+    <string name="stream_notification">Used to identify the volume of audio streams for notifications</string>
+    <string name="stream_music">Used to identify the volume of audio streams for music playback</string>
+    <string name="stream_dtmf">Used to identify the volume of audio streams for DTMF Tones</string>
+    <string name="stream_alarm">Used to identify the volume of audio streams for alarms</string>
+    <string name="stream_accessibility">Used to identify the volume of audio streams for accessibility prompts</string>
+
+    <string name="pref_title_stream_type">Stream Type</string>
+    <string name="pref_title_choose_stream_type">Choose stream type</string>
+
+    <string name="compass_dial" translatable="false">Compass Dial</string>
+    <string name="compass_hands" translatable="false">Compass Hands</string>
+
+    <string name="sotw_north">N</string>
+    <string name="sotw_east">E</string>
+    <string name="sotw_south">S</string>
+    <string name="sotw_west">W</string>
+    <string name="sotw_northeast">NE</string>
+    <string name="sotw_northwest">NW</string>
+    <string name="sotw_southeast">SE</string>
+    <string name="sotw_southwest">SW</string>
+    <string name="compassLabel">Compass</string>
+</resources>

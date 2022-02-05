@@ -1,0 +1,165 @@
+#!/bin/bash
+
+# Tests for Serval DNA server operations.
+#
+# Copyright 2012 Serval Project, Inc.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+source "${0%/*}/../testframework.sh"
+source "${0%/*}/../testdefs.sh"
+
+setup() {
+   setup_servald
+   assert_no_servald_processes
+   foreach_instance +A +B create_single_identity
+   configure_servald_server() { add_servald_interface; set_server_vars; }
+   start_servald_instances +A +B
+   set_instance +A
+}
+
+finally() {
+   stop_all_servald_servers
+}
+
+teardown() {
+   kill_all_servald_processes
+   assert_no_servald_processes
+   report_all_servald_servers
+}
+
+set_server_vars() {
+   executeOk_servald config \
+      set log.console.level debug \
+      set log.console.show_pid on \
+      set log.console.show_time on \
+      set rhizome.enable No \
+      set debug.mdprequests Yes \
+      set debug.keyring Yes \
+      set debug.linkstate Yes
+}
+
+doc_LookupWildcard="Lookup by wildcard"
+test_LookupWildcard() {
+   executeOk_servald dna lookup "*"
+   assertStdoutLineCount '==' 4
+   assertStdoutGrep --matches=1 "^sid://$SIDA/local/$DIDA:$DIDA:$NAMEA\$"
+   assertStdoutGrep --matches=1 "^sid://$SIDB/local/$DIDB:$DIDB:$NAMEB\$"
+}
+
+doc_LookupEmpty="Lookup by empty string"
+test_LookupEmpty() {
+   executeOk_servald dna lookup ""
+   assertStdoutLineCount '==' 4
+   assertStdoutGrep --matches=1 "^sid://$SIDA/local/$DIDA:$DIDA:$NAMEA\$"
+   assertStdoutGrep --matches=1 "^sid://$SIDB/local/$DIDB:$DIDB:$NAMEB\$"
+}
+
+doc_LookupNonExistent="Lookup non-existent phone number"
+test_LookupNonExistent() {
+   executeOk_servald dna lookup "5551234"
+   assertStdoutLineCount '==' 2
+}
+
+doc_LookupLocal="Lookup local phone number"
+test_LookupLocal() {
+   executeOk_servald dna lookup "$DIDA"
+   assertStdoutLineCount '==' 3
+   assertStdoutGrep --matches=1 "^sid://$SIDA/local/$DIDA:$DIDA:$NAMEA\$"
+}
+
+doc_LookupRemote="Lookup remote phone number"
+test_LookupRemote() {
+   executeOk_servald dna lookup "$DIDB"
+   assertStdoutLineCount '==' 3
+   assertStdoutGrep --matches=1 "^sid://$SIDB/local/$DIDB:$DIDB:$NAMEB\$"
+}
+
+doc_ReverseLookup="Resolve a remote identity"
+test_ReverseLookup() {
+   executeOk_servald reverse lookup $SIDB
+   assertStdoutGrep --matches=1 ":$DIDB"
+   assertStdoutGrep --matches=1 ":$NAMEB"
+}
+
+setup_multi_helper() {
+   setup_servald
+   assert_no_servald_processes
+   dnahelper="$TFWTMP/dnahelper"
+   echo "#!$BASH" >"$dnahelper"
+   cat >>"$dnahelper" <<'EOF'
+echo STARTED
+while read line
+do
+   token="${line%%|*}"
+   case "$1:$line" in
+   A:*'|00003|') echo "$token|uri:A1|00003|Name One|";;
+   A:*'|00002|') echo "$token|uri:A2|00002|Name Two|";;
+   B:*'|00003|') echo "$token|uri:B1|00003|Name Three|";;
+   B:*'|00002|') echo "$token|uri:B2|00002|Name Four|";;
+   B:*'|00001|') echo "$token|uri:B3|00001|Name Five|";;
+   C:*'|00003|') echo "$token|uri:C1|00003|Name Six|";;
+   esac
+   echo DONE
+done
+EOF
+   chmod 0755 "$dnahelper"
+   foreach_instance +A +B +C +D create_single_identity
+   configure_servald_server() {
+      add_servald_interface
+      set_server_vars
+      executeOk_servald config \
+         set debug.dnahelper on \
+         set dna.helper.executable "$dnahelper" \
+         set dna.helper.argv.1 "$instance_name"
+   }
+   start_servald_instances +A +B +C +D
+   set_instance +D
+}
+
+doc_MultiLookupHelperThree="Lookup phone number three nodes reply"
+setup_MultiLookupHelperThree() {
+   setup_multi_helper
+}
+test_MultiLookupHelperThree() {
+   executeOk_servald dna lookup 00003
+   assertStdoutLineCount '==' 5
+   assertStdoutGrep --matches=1 "uri:A1:00003:Name One$"
+   assertStdoutGrep --matches=1 "uri:B1:00003:Name Three$"
+   assertStdoutGrep --matches=1 "uri:C1:00003:Name Six$"
+}
+
+doc_MultiLookupHelperTwo="Lookup phone number two nodes reply"
+setup_MultiLookupHelperTwo() {
+   setup_multi_helper
+}
+test_MultiLookupHelperTwo() {
+   executeOk_servald dna lookup 00002
+   assertStdoutLineCount '==' 4
+   assertStdoutGrep --matches=1 "uri:A2:00002:Name Two\$"
+   assertStdoutGrep --matches=1 "uri:B2:00002:Name Four\$"
+}
+
+doc_MultiLookupHelperOne="Lookup phone number one node replies"
+setup_MultiLookupHelperOne() {
+   setup_multi_helper
+}
+test_MultiLookupHelperOne() {
+   executeOk_servald dna lookup 00001
+   assertStdoutLineCount '==' 3
+   assertStdoutGrep --matches=1 "uri:B3:00001:Name Five\$"
+}
+
+runTests "$@"

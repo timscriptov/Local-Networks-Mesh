@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+ * Copyright (C) 2011,2012 The Serval Project
+ * 
+ * This file is part of Serval Software (http://www.servalproject.org)
+ * 
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU
+  General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ -->
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <!-- RHIZOME -->
+
+    <!-- activity labels -->
+    <string name="rhizome_main_appname">Serval Share Files</string>
+    <string name="rhizome_list_appname">Serval Find Shared Files</string>
+    <string name="rhizome_saved_appname">Serval Saved Files</string>
+
+    <!-- for the intents and services -->
+    <string name="rhizome_share_file_permission_label">Add files to Rhizome</string>
+    <string name="rhizome_share_file_permission_description">Add files via the Serval Mesh using Rhizome</string>
+    <string name="rhizome_receive_file_permission_label">Receive files from Rhizome</string>
+    <string name="rhizome_receive_file_permission_description">Receive files via the Serval Mesh using Rhizome</string>
+    <string name="rhizome_share_file_toast">File shared via Serval Mesh</string>
+
+    <!-- for the UI -->
+    <string name="share_button">Share</string>
+    <string name="find_button">Find</string>
+    <string name="saved_button">Saved</string>
+    <string name="storage_settings">Free Space on External Storage</string>
+
+    <!-- For the picker -->
+    <string name="pick_file">Pick File</string>
+    <string name="pick_folder">Pick Folder</string>
+    <!-- For the share file via rhizome activity  -->
+    <string name="sf_name">Share via Mesh</string>
+
+    <!-- Share us -->
+    <string name="share_us_header"><b>Sharing Serval Software</b></string>
+    <string name="share_us_button_text">Share Serval</string>
+    <string name="share_wifi_instr">You can share this software directly with another nearby phone via Wi-Fi.</string>
+    <string name="share_wifi_off">First connect this phone to a Wi-Fi network, or turn on the Portable Wi-Fi hotspot via the connection screen, then return here for further instructions.</string>
+    <string name="share_wifi">Simply connect the phone to %1$s and open %2$s in the web browser</string>
+    <string name="share_us_text">OR you can share using any other of the sharing methods enabled on your phone (such as Bluetooth).</string>
+    <string name="share_us_warning">Please be sure you only share this software if you have obtained it from a trusted software source.</string>
+</resources>

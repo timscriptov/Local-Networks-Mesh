@@ -1,0 +1,88 @@
+/*
+Serval Help Files Style
+Author: Romana
+*/
+
+
+html, body {
+	color: #ffffff; 
+	background: #000000;
+	text-align:left;
+	font-size: 12pt;
+}
+
+tr.index > td
+{
+  padding-bottom:.5em;
+}
+	
+td.title {
+	font-weight: bold;
+	color: #859554;
+	background: #000000;
+}
+
+td.link a {
+	color: #ffffff;
+	background: #000000;
+	padding-bottom: 5px;
+}
+
+td.indextitle a{
+	font-weight: bold;
+	color: #859554;
+	background: #000000;
+	text-decoration: none;
+}
+
+td.indexbody a{
+	color: #ffffff;
+	background: #000000;	
+	padding-bottom: 5px;
+	text-decoration: none;
+}
+
+
+div {
+	color: #ffffff; 
+	background: #000000;
+	text-align:left;
+	padding-bottom: 5px;
+}
+
+div.title {
+	font-weight: bold;
+	color: #859554;
+	background: #000000;
+}
+
+h1 {
+	font-size: larger;
+	font-weight: bold;
+	background: #000000;
+}
+h2 {
+	font-size: inherit;
+	font-weight: bold;
+	color: #859554;
+	background: #000000;
+}
+a {
+	color: #859554;
+	background: #000000;
+	text-align:left;
+}
+pre, code {
+	white-space: pre-wrap;
+}
+.button {
+    display: block;
+    height: 30px;
+    width: 150px;
+    background: #849554;
+    color: #ffffff;
+    text-decoration: none;
+    padding-top: 10px;
+    text-align: center;
+    border-top: 2px solid #cccc99;
+}

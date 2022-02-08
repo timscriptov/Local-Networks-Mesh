@@ -12,15 +12,6 @@
             android:summary="Выберите тип ссылки для отправки своих координат"
             android:title="@string/link_type" />
 
-        <ListPreference
-            android:defaultValue="0"
-            android:dialogTitle="Выберите систему измерения"
-            android:entries="@array/speed_entries"
-            android:entryValues="@array/speed_values"
-            android:key="speedType"
-            android:summary="Выберите в чем измерять скорость движения"
-            android:title="Скорость" />
-
     </PreferenceCategory>
 
     <PreferenceCategory android:title="Телефон">
@@ -47,6 +38,29 @@
             android:key="resetDetails"
             android:summary="@string/pref_summary_reset_details"
             android:title="@string/PhoneResetLabel" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Others">
+
+        <Preference
+            android:key="meshTesting"
+            android:summary="@string/ResetWifiText"
+            android:title="@string/ShowResetWifi" />
+
+        <Preference
+            android:key="viewLogs"
+            android:summary="@string/LogShowText"
+            android:title="@string/LogShowLabel" />
+
+        <Preference
+            android:key="website"
+            android:summary="Просмотреть локальный сайт"
+            android:title="Документация" />
+
+        <Preference
+            android:key="help"
+            android:title="@string/helpLabel" />
 
     </PreferenceCategory>
 

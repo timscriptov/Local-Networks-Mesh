@@ -55,7 +55,7 @@
     <string name="LogShowLabel">View Logs</string>
     <string name="LogShowText">View Serval Mesh Logfile</string>
     <string name="PhoneResetLabel">Очистить данные</string>
-    <string name="PhoneDetails">Phone No:</string>
+    <string name="PhoneDetails">Номер:</string>
     <string name="ShowResetWifi">Mesh Testing</string>
     <string name="ResetWifiText">Test if a Mesh network connection can be made</string>
 

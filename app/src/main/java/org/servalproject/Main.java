@@ -22,7 +22,6 @@ package org.servalproject;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -47,16 +46,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import org.servalproject.ServalBatPhoneApplication.State;
-import org.servalproject.batphone.CallDirector;
 import org.servalproject.rhizome.RhizomeMain;
-import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servaldna.keyring.KeyringIdentity;
 import org.servalproject.ui.CompassActivity;
@@ -132,6 +128,22 @@ public class Main extends AppCompatActivity implements View.OnClickListener {
         }
     };
 
+    private static Double getDistance(Location one, Location two) {
+        int R = 6371000;
+        double dLat = toRad(two.getLatitude() - one.getLatitude());
+        double dLon = toRad(two.getLongitude() - one.getLongitude());
+        double lat1 = toRad(one.getLatitude());
+        double lat2 = toRad(two.getLatitude());
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+
+    private static double toRad(Double d) {
+        return d * Math.PI / 180;
+    }
+
     // Кнопка открытия карт
     private void openMaps() {
         if (Utils.isInstalled(this, "com.google.android.apps.maps")) {
@@ -157,6 +169,10 @@ public class Main extends AppCompatActivity implements View.OnClickListener {
         }
     }
 
+    //-----------------------------------------------------
+    // Menu related methods
+    //-----------------------------------------------------
+
     @Override
     public void onClick(View view) {
         // Do nothing until upgrade finished.
@@ -164,18 +180,9 @@ public class Main extends AppCompatActivity implements View.OnClickListener {
             return;
 
         switch (view.getId()) {
-            case R.id.btncall:
-                if (!PeerListService.havePeers()) {
-                    app.displayToastMessage("You do not have a connection to any other phones");
-                    return;
-                }
-                try {
-                    startActivity(new Intent(Intent.ACTION_DIAL));
-                    return;
-                } catch (ActivityNotFoundException e) {
-                    Log.e(TAG, e.getMessage(), e);
-                }
-                startActivity(new Intent(app, CallDirector.class));
+            case R.id.contactsLabel:
+                Intent mIntent = new Intent(this, org.servalproject.PeerList.class);
+                startActivityForResult(mIntent, PEER_LIST_RETURN);
                 break;
             case R.id.messageLabel:
                 if (!ServalD.isRhizomeEnabled()) {
@@ -188,29 +195,27 @@ public class Main extends AppCompatActivity implements View.OnClickListener {
             case R.id.mapsLabel:
                 openMaps();
                 break;
-            case R.id.contactsLabel:
-                Intent mIntent = new Intent(this, org.servalproject.PeerList.class);
-                startActivityForResult(mIntent, PEER_LIST_RETURN);
-                break;
-            case R.id.settingsLabel:
+
+            case R.id.compassLabel:
                 startActivity(new Intent(getApplicationContext(),
-                        org.servalproject.ui.SettingsScreenActivity.class));
+                        CompassActivity.class));
                 break;
             case R.id.sharingLabel:
                 startActivity(new Intent(getApplicationContext(),
                         RhizomeMain.class));
                 break;
-            case R.id.compassLabel:
-                startActivity(new Intent(getApplicationContext(),
-                        CompassActivity.class));
-                break;
             case R.id.servalLabel:
                 startActivity(new Intent(getApplicationContext(),
                         ShareUsActivity.class));
                 break;
+
+            case R.id.flashlightLabel:
+                break;
             case R.id.powerLabel:
                 startActivity(new Intent(getApplicationContext(),
                         Networks.class));
+                break;
+            case R.id.ipScanerLabel:
                 break;
         }
     }
@@ -252,23 +257,22 @@ public class Main extends AppCompatActivity implements View.OnClickListener {
                 R.drawable.ic_launcher_power_off);
 
         int[] listenTo = {
-                R.id.btncall,
+                R.id.contactsLabel,
                 R.id.messageLabel,
                 R.id.mapsLabel,
-                R.id.contactsLabel,
-                R.id.settingsLabel,
-                R.id.sharingLabel,
+
                 R.id.compassLabel,
+                R.id.sharingLabel,
                 R.id.servalLabel,
+
+                R.id.flashlightLabel,
+                R.id.powerLabel,
+                R.id.ipScanerLabel,
         };
         for (int i = 0; i < listenTo.length; i++) {
             this.findViewById(listenTo[i]).setOnClickListener(this);
         }
     }
-
-    //-----------------------------------------------------
-    // Menu related methods
-    //-----------------------------------------------------
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -280,13 +284,8 @@ public class Main extends AppCompatActivity implements View.OnClickListener {
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.action_settings) {
             Intent intentSettingsActivity = new Intent(this, SettingsActivity.class);
-            this.startActivity(intentSettingsActivity);
+            startActivity(intentSettingsActivity);
             return true;
-        } else if (item.getItemId() == R.id.action_help) {
-            Intent intent = new Intent(getApplicationContext(),
-                    HtmlHelp.class);
-            intent.putExtra("page", "helpindex.html");
-            startActivity(intent);
         }
         return super.onOptionsItemSelected(item);
     }
@@ -384,7 +383,6 @@ public class Main extends AppCompatActivity implements View.OnClickListener {
         }
     }
 
-
     // ----------------------------------------------------
     // UI
     // ----------------------------------------------------
@@ -415,7 +413,7 @@ public class Main extends AppCompatActivity implements View.OnClickListener {
             detailsText.setText(//String.format("%s: %s%s%s: %s (%s)%s%s: %s (%s)",
                     getString(R.string.accuracy) + ": " + getAccuracy(location) + newline +
                             getString(R.string.altitude) + ": " + getAltitude(location) + newline +
-                    getString(R.string.speed) + ": " + getSpeed(location) + newline +
+                            getString(R.string.speed) + ": " + getSpeed(location) + newline +
                             getString(R.string.latitude) + ": " + getLatitude(location) + "(" + getDMSLatitude(location) + ")" + newline +
                             getString(R.string.longitude) + ": " + getLongitude(location) + "(" + getDMSLongitude(location) + ")");
 
@@ -554,21 +552,22 @@ public class Main extends AppCompatActivity implements View.OnClickListener {
     }
 
     private String getSpeed(Location location) {
-        if(ServalBatPhoneApplication.getPreferences().getString("", "0").equals("0")) {
-            return getSpeedKMH(location);
-        } else {
-            return getSpeedMS(location);
-        }
+        //if(ServalBatPhoneApplication.getPreferences().getString("", "0").equals("0")) {
+        return getSpeedKMH(location);
+        //} else {
+        //    return getSpeedMS(location);
+        //}
     }
 
     private String getSpeedKMH(Location location) {
-        float speed = (location.getSpeed() * 3600) / 1000;;
+        float speed = (location.getSpeed() * 3600) / 1000;
+        ;
         /*if (speed < 0.01) {
             return "?";
         } else if (speed > 99) {
             return "99+";
         } else {*/
-        return String.format(Locale.US,"%2.0fkm/h", speed);
+        return String.format(Locale.US, "%2.0fkm/h", speed);
         //}
     }
 
@@ -581,22 +580,6 @@ public class Main extends AppCompatActivity implements View.OnClickListener {
         } else {*/
         return String.format(Locale.US, "%2.0fm/s", speed);
         //}
-    }
-
-    private static Double getDistance(Location one, Location two) {
-        int R = 6371000;
-        double dLat = toRad(two.getLatitude() - one.getLatitude());
-        double dLon = toRad(two.getLongitude() - one.getLongitude());
-        double lat1 = toRad(one.getLatitude());
-        double lat2 = toRad(two.getLatitude());
-        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-                + Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c;
-    }
-
-    private static double toRad(Double d) {
-        return d * Math.PI / 180;
     }
 
     private String getLatitude(Location location) {

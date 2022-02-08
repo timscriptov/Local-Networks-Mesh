@@ -19,10 +19,13 @@
 package org.servalproject.ui.help;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.customtabs.CustomTabsIntent;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.webkit.WebBackForwardList;
@@ -50,7 +53,7 @@ public class HtmlHelp extends AppCompatActivity {
      */
     // Since we're only loading our own assets from the asset folder in this
     // view, there shouldn't be any security issues.
-    @SuppressLint("SetJavaScriptEnabled")
+    @SuppressLint({"SetJavaScriptEnabled", "JavascriptInterface"})
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,6 +65,20 @@ public class HtmlHelp extends AppCompatActivity {
         helpBrowser.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
         helpBrowser.setBackgroundColor(Color.BLACK);
         helpBrowser.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
+    }
+
+    @SuppressLint("ResourceAsColor")
+    private void startCustomTabsInBrowser(Activity activity, String startUrl) {
+        CustomTabsIntent.Builder intentBuilder = new CustomTabsIntent.Builder();
+        /*CustomTabColorSchemeParams params = new CustomTabColorSchemeParams.Builder()
+                .setNavigationBarColor(ContextCompat.getColor(activity, R.color.colorPrimaryDark))
+                .setToolbarColor(ContextCompat.getColor(activity, R.color.colorPrimaryDark))
+                .setSecondaryToolbarColor(ContextCompat.getColor(activity, R.color.colorPrimaryDark))
+                .build();*/
+        intentBuilder.setShowTitle(true);
+        //intentBuilder.setColorSchemeParams(CustomTabsIntent.COLOR_SCHEME_DARK, params);
+        CustomTabsIntent customTabsIntent = intentBuilder.build();
+        customTabsIntent.launchUrl(activity, Uri.parse(startUrl));
     }
 
     @Override
@@ -101,9 +118,10 @@ public class HtmlHelp extends AppCompatActivity {
                 return false;
 
             // Load the uri using the full internet browser app.
-            Uri uri = Uri.parse(url);
-            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-            startActivity(intent);
+            //Uri uri = Uri.parse(url);
+            //Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+            //startActivity(intent);
+            startCustomTabsInBrowser(HtmlHelp.this, url);
             return true;
         }
     }
@@ -113,5 +131,4 @@ public class HtmlHelp extends AppCompatActivity {
             return HtmlHelp.this.getString(R.string.version);
         }
     }
-
 }

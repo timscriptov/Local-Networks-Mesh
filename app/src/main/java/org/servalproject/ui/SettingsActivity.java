@@ -20,14 +20,24 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import org.servalproject.LogActivity;
+import org.servalproject.PreparationWizard;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.servaldna.keyring.KeyringIdentity;
+import org.servalproject.ui.help.HtmlHelp;
+
+import java.io.File;
 
 public class SettingsActivity extends PreferenceActivity {
 
     public Preference notificationSound;
     public Preference resetDetails;
+    public Preference meshTesting;
+    public Preference viewLogs;
+    public Preference help;
+    public Preference website;
+
     private final int RINGTONE_PICKER_ACTIVITY = 1;
 
     private static final OnPreferenceChangeListener prefsListener = (pref, value) -> {
@@ -54,7 +64,6 @@ public class SettingsActivity extends PreferenceActivity {
         addPreferencesFromResource(R.xml.preferences);
         bindPreferenceSummaryToValue(findPreference("prefLinkType"));
         bindPreferenceSummaryToValue(findPreference("streamType"));
-        bindPreferenceSummaryToValue(findPreference("speedType"));
 
         notificationSound = findPreference("notificationSound");
         notificationSound.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -150,6 +159,64 @@ public class SettingsActivity extends PreferenceActivity {
                 });
                 dialog.setNegativeButton(android.R.string.cancel, null);
                 dialog.show();
+                return true;
+            }
+        });
+
+        meshTesting = findPreference("meshTesting");
+        meshTesting.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference p1) {
+                // Reset Wi-fi Settings Screen
+                // Clear out old attempt_ files
+                File varDir = new File(
+                        ServalBatPhoneApplication.getContext().coretask.DATA_FILE_PATH
+                                +
+                                "/var/");
+                if (varDir.isDirectory())
+                    for (File f : varDir.listFiles()) {
+                        if (!f.getName().startsWith("attempt_"))
+                            continue;
+                        f.delete();
+                    }
+                // Re-run wizard
+                Intent prepintent = new Intent(SettingsActivity.this,
+                        PreparationWizard.class);
+                prepintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(prepintent);
+                return true;
+            }
+        });
+
+        viewLogs = findPreference("viewLogs");
+        viewLogs.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference p1) {
+                startActivity(new Intent(SettingsActivity.this, LogActivity.class));
+                return true;
+            }
+        });
+
+        help = findPreference("help");
+        help.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference p1) {
+                Intent intent = new Intent(getApplicationContext(),
+                        HtmlHelp.class);
+                intent.putExtra("page", "helpindex.html");
+                startActivity(intent);
+                return true;
+            }
+        });
+
+        website = findPreference("website");
+        website.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference p1) {
+                Intent intent = new Intent(getApplicationContext(),
+                        HtmlHelp.class);
+                intent.putExtra("page", "index.html");
+                startActivity(intent);
                 return true;
             }
         });

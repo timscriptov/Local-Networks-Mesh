@@ -294,12 +294,14 @@ public class RequestThread extends Thread {
                 try {
                     out.close();
                 } catch (IOException e1) {
+                    e1.printStackTrace();
                 }
             }
             if (content != null) {
                 try {
                     content.close();
                 } catch (IOException e1) {
+                    e1.printStackTrace();
                 }
             }
         }
@@ -315,6 +317,4 @@ public class RequestThread extends Thread {
             this.code = code;
         }
     }
-
-
 }

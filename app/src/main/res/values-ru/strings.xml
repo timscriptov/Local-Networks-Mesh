@@ -32,7 +32,7 @@
     <string name="messageLabel">Сообщения</string>
     <string name="contactsLabel">Контакты</string>
     <string name="mapsLabel">Карты</string>
-    <string name="sharingLabel">Отпр. файлы</string>
+    <string name="sharingLabel">Файлы</string>
     <string name="servalLabel">Поделиться</string>
     <string name="settingsLabel">Настройки</string>
     <string name="powerLabel">Выкл</string>

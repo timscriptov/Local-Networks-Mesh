@@ -169,7 +169,7 @@
                 android:orientation="horizontal">
 
                 <ImageView
-                    android:id="@+id/btncall"
+                    android:id="@+id/contactsLabel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -185,12 +185,12 @@
                     android:src="@drawable/ic_launcher_message" />
 
                 <ImageView
-                    android:id="@+id/contactsLabel"
+                    android:id="@+id/sharingLabel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:contentDescription="@string/contactsLabel"
-                    android:src="@drawable/ic_launcher_contacts" />
+                    android:contentDescription="@string/sharingLabel"
+                    android:src="@drawable/ic_launcher_sharing" />
 
             </LinearLayout>
 
@@ -201,7 +201,7 @@
                 android:orientation="horizontal">
 
                 <TextView
-                    android:id="@+id/callText"
+                    android:id="@+id/contactsText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -217,12 +217,12 @@
                     android:text="@string/messageLabel" />
 
                 <TextView
-                    android:id="@+id/contactsText"
+                    android:id="@+id/sharingText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="center"
-                    android:text="@string/contactsLabel" />
+                    android:text="@string/sharingLabel" />
 
             </LinearLayout>
 
@@ -241,12 +241,12 @@
                     android:src="@drawable/ic_launcher_map" />
 
                 <ImageView
-                    android:id="@+id/sharingLabel"
+                    android:id="@+id/compassLabel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:contentDescription="@string/sharingLabel"
-                    android:src="@drawable/ic_launcher_sharing" />
+                    android:contentDescription="Compass"
+                    android:src="@drawable/ic_shortcut_compass_calibration" />
 
                 <ImageView
                     android:id="@+id/servalLabel"
@@ -273,12 +273,12 @@
                     android:text="@string/mapsLabel" />
 
                 <TextView
-                    android:id="@+id/sharingText"
+                    android:id="@+id/compassText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="center"
-                    android:text="@string/sharingLabel" />
+                    android:text="@string/compassLabel" />
 
                 <TextView
                     android:id="@+id/wifiText"
@@ -297,12 +297,12 @@
                 android:orientation="horizontal">
 
                 <ImageView
-                    android:id="@+id/settingsLabel"
+                    android:id="@+id/flashlightLabel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:contentDescription="@string/settingsLabel"
-                    android:src="@drawable/ic_launcher_config" />
+                    android:contentDescription="flashlight"
+                    android:src="@drawable/ic_shortcut_lightbulb_outline" />
 
                 <ImageView
                     android:id="@+id/powerLabel"
@@ -313,12 +313,12 @@
                     android:src="@drawable/ic_launcher_power" />
 
                 <ImageView
-                    android:id="@+id/compassLabel"
+                    android:id="@+id/ipScanerLabel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:contentDescription="Compass"
-                    android:src="@drawable/ic_shortcut_compass_calibration" />
+                    android:contentDescription="IP Сканер"
+                    android:src="@drawable/ic_shortcut_scanner" />
 
             </LinearLayout>
 
@@ -330,12 +330,12 @@
                 android:orientation="horizontal">
 
                 <TextView
-                    android:id="@+id/settingsText"
+                    android:id="@+id/flashlightText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="center"
-                    android:text="@string/settingsLabel" />
+                    android:text="Фонарик" />
 
                 <TextView
                     android:id="@+id/btntoggle"
@@ -346,12 +346,12 @@
                     android:text="@string/connectLabel" />
 
                 <TextView
-                    android:id="@+id/compassText"
+                    android:id="@+id/ipScanerText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="center"
-                    android:text="@string/compassLabel" />
+                    android:text="IP сканер" />
 
             </LinearLayout>
 

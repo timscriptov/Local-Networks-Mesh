@@ -5,8 +5,8 @@ android {
 
     defaultConfig {
         applicationId "org.servalproject"
-        minSdkVersion 14
-        targetSdkVersion 19
+        minSdkVersion 21
+        targetSdkVersion 22
         versionCode 2371
         versionName "0.93"
         /*externalNativeBuild {

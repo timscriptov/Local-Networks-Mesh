@@ -3,6 +3,42 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/accountssetting.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/activity_compass.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/call_director.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/contacts_activity.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/folder.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/folders.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/htmlhelp.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/incall.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/login_activity.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/logview.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/main.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/messages_list.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/messages_list_item.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/network.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/networks.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/peer.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/preparationlayout.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/rhizome_detail.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/rhizome_list.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/rhizome_list_item.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/rhizome_main.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/rhizome_saved.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/set_phone_no.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/settingsmeshmsscreen.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/settingsscreen.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/setupview.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/shareus.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/show_conversation.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/show_conversation_item_status.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/show_conversation_item_them.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/show_conversation_item_us.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/sms_peer.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/toastview.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/toolbar.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/layout/wizard.xml" value="0.36666666666666664" />
+        <entry key="..\:/AppProjects/Local-Networks-Mesh/app/src/main/res/xml/preferences.xml" value="0.36666666666666664" />
         <entry key="..\:/AppProjects/batphone/app/src/main/res/drawable-hdpi/list_selector_background.xml" value="0.2985" />
         <entry key="..\:/AppProjects/batphone/app/src/main/res/drawable/background.xml" value="0.2985" />
         <entry key="..\:/AppProjects/batphone/app/src/main/res/drawable/background_selector.xml" value="0.2985" />

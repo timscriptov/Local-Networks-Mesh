@@ -32,21 +32,27 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/share_button" />
+            android:backgroundTint="@color/colorAccent"
+            android:text="@string/share_button"
+            android:textColor="#fff" />
 
         <Button
             android:id="@+id/rhizome_find"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/find_button" />
+            android:backgroundTint="@color/colorAccent"
+            android:text="@string/find_button"
+            android:textColor="#fff" />
 
         <Button
             android:id="@+id/rhizome_saved"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/saved_button" />
+            android:backgroundTint="@color/colorAccent"
+            android:text="@string/saved_button"
+            android:textColor="#fff" />
 
     </LinearLayout>
 

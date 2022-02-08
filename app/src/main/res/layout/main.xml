@@ -70,7 +70,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/getting_location"
                     android:textAppearance="?android:attr/textAppearanceLarge"
-                    android:visibility="visible" />
+                    android:visibility="gone" />
 
                 <ProgressBar
                     android:id="@+id/progressBar"
@@ -84,8 +84,10 @@
                     android:id="@+id/gpsButton"
                     android:layout_width="fill_parent"
                     android:layout_height="54dp"
+                    android:backgroundTint="@color/colorAccent"
                     android:onClick="openLocationSettings"
                     android:text="@string/turn_on_GPS"
+                    android:textColor="#fff"
                     android:visibility="gone" />
 
             </LinearLayout>

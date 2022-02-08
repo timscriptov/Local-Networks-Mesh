@@ -169,4 +169,5 @@
     <string name="sotw_southeast">ЮВ</string>
     <string name="sotw_southwest">ЮЗ</string>
     <string name="compassLabel">Компас</string>
+    <string name="pref_summary_reset_details">Очистить свои данные</string>
 </resources>

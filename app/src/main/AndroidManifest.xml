@@ -165,17 +165,6 @@
             android:launchMode="singleTop"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".ui.SettingsMeshMSScreenActivity"
-            android:label="@string/settingsscreen_header"
-            android:launchMode="singleTop"
-            android:screenOrientation="portrait" />
-
-        <activity
-            android:name=".ui.AccountsSettingsActivity"
-            android:label="@string/AccountsSettingsLabel"
-            android:launchMode="singleTop"
-            android:screenOrientation="portrait" />
-        <activity
             android:name=".ui.Networks"
             android:launchMode="singleTop"
             android:screenOrientation="portrait" />

@@ -20,9 +20,9 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
+    android:background="@drawable/bg"
     android:gravity="center"
-    android:orientation="vertical"
-    android:background="@drawable/bg">
+    android:orientation="vertical">
 
     <!-- call information -->
 

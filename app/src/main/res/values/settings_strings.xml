@@ -52,7 +52,6 @@
     <string name="WifiSettingsLabel">Wifi Settings</string>
     <string name="WifiSettingsText">View and Change Wifi Settings</string>
     <string name="AccountsSettingsLabel">Accounts Management</string>
-    <string name="AccountsSettingsText">View and Change Various Accounts Settings</string>
     <string name="LogShowLabel">View Logs</string>
     <string name="LogShowText">View Serval Mesh Logfile</string>
     <string name="PhoneResetLabel">Reset Details</string>
@@ -61,11 +60,6 @@
     <string name="ResetWifiText">Test if a Mesh network connection can be made</string>
 
     <!-- Other settings screens -->
-    <string name="ac_name">Current Name</string>
-    <string name="ac_sid">Current Serval ID</string>
-    <string name="ac_no">Current Number</string>
-    <string name="MMSSettingsLabel">MeshMS Settings</string>
-    <string name="MMSSettingsText">View and Change MeshMS Settings</string>
     <string name="MMSSettings_NotifSoundLabel">Notification Sound</string>
     <string name="MMSSettings_NotifSoundText">Select notification sound for incoming MeshMS</string>
 </resources>

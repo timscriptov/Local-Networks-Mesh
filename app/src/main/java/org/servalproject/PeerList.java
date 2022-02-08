@@ -63,19 +63,15 @@ public class PeerList extends ListActivity {
     private boolean displayed = false;
     private boolean returnResult = false;
 
-    private List<Peer> peers = new ArrayList<>();
-    private IPeerListListener listener = new IPeerListListener() {
+    private final List<Peer> peers = new ArrayList<>();
+    private final IPeerListListener listener = new IPeerListListener() {
         @Override
         public void peerChanged(final Peer p) {
             runOnUiThread(new Runnable() {
-
                 @Override
                 public void run() {
                     peerUpdated(p);
                 }
-
-                ;
-
             });
         }
     };

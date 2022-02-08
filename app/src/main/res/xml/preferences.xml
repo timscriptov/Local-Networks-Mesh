@@ -34,6 +34,20 @@
             android:summary="Выберите звуковой поток для общения по телефону"
             android:title="@string/pref_title_stream_type" />
 
+        <Preference
+            android:key="notificationSound"
+            android:summary="@string/MMSSettings_NotifSoundText"
+            android:title="@string/MMSSettings_NotifSoundLabel" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Data">
+
+        <Preference
+            android:key="resetDetails"
+            android:summary="@string/pref_summary_reset_details"
+            android:title="@string/PhoneResetLabel" />
+
     </PreferenceCategory>
 
 </PreferenceScreen>

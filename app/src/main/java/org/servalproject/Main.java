@@ -85,6 +85,7 @@ import java.util.Locale;
 public class Main extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = "Main";
     private static final int PERMISSION_REQUEST = 1;
+    private static final int PEER_LIST_RETURN = 0;
     public ServalBatPhoneApplication app;
     boolean registered = false;
     private TextView buttonToggle;
@@ -120,23 +121,6 @@ public class Main extends AppCompatActivity implements View.OnClickListener {
         }
     };
 
-    /*private void openMaps() {
-        // check to see if maps is installed
-        try {
-            PackageManager mManager = getPackageManager();
-            mManager.getApplicationInfo("org.servalproject.maps",
-                    PackageManager.GET_META_DATA);
-
-            Intent mIntent = mManager
-                    .getLaunchIntentForPackage("org.servalproject.maps");
-            mIntent.addCategory(Intent.CATEGORY_LAUNCHER);
-            startActivity(mIntent);
-
-        } catch (NameNotFoundException e) {
-            startActivity(new Intent(getApplicationContext(),
-                    org.servalproject.ui.MapsActivity.class));
-        }
-    }*/
     private Drawable powerOffDrawable;
     BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
@@ -205,8 +189,8 @@ public class Main extends AppCompatActivity implements View.OnClickListener {
                 openMaps();
                 break;
             case R.id.contactsLabel:
-                startActivity(new Intent(getApplicationContext(),
-                        org.servalproject.ui.ContactsActivity.class));
+                Intent mIntent = new Intent(this, org.servalproject.PeerList.class);
+                startActivityForResult(mIntent, PEER_LIST_RETURN);
                 break;
             case R.id.settingsLabel:
                 startActivity(new Intent(getApplicationContext(),
@@ -417,7 +401,7 @@ public class Main extends AppCompatActivity implements View.OnClickListener {
 
         // Update display area
         gpsButton.setVisibility(locationEnabled ? View.GONE : View.VISIBLE);
-        progressTitle.setVisibility(waitingForLocation ? View.VISIBLE : View.GONE);
+        //progressTitle.setVisibility(waitingForLocation ? View.VISIBLE : View.GONE);
         progressBar.setVisibility(waitingForLocation ? View.VISIBLE : View.GONE);
         detailsText.setVisibility(haveLocation ? View.VISIBLE : View.GONE);
 

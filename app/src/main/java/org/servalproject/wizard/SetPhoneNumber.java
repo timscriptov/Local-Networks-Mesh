@@ -79,7 +79,7 @@ public class SetPhoneNumber extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         app = (ServalBatPhoneApplication) this.getApplication();
 
-        setContentView(R.layout.set_phone_no);
+        setContentView(R.layout.login_activity);
         number = (EditText) this.findViewById(R.id.batphoneNumberText);
         number.setSelectAllOnFocus(true);
 

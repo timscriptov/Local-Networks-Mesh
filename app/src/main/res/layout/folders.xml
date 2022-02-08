@@ -39,7 +39,9 @@
             android:id="@+id/ok_btn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/share_button" />
+            android:backgroundTint="@color/colorAccent"
+            android:text="@string/share_button"
+            android:textColor="#fff" />
 
     </LinearLayout>
 

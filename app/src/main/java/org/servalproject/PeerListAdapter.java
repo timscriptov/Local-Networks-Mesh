@@ -48,7 +48,7 @@ import java.util.List;
 
 public class PeerListAdapter<T extends IPeer> extends ArrayAdapter<T> {
     public PeerListAdapter(Context context, List<T> peers) {
-        super(context, R.layout.peer, R.id.Name, peers);
+        super(context, R.layout.contact_item, R.id.Name, peers);
     }
 
     @Override

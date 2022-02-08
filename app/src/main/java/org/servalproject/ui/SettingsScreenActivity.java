@@ -28,6 +28,7 @@ package org.servalproject.ui;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -42,16 +43,13 @@ import java.io.File;
 public class SettingsScreenActivity extends AppCompatActivity implements OnClickListener {
 
     @Override
-    public void onClick(View view) {
+    public void onClick(@NonNull View view) {
         switch (view.getId()) {
             case R.id.btnWifiSettings:
                 startActivity(new Intent(this, SetupActivity.class));
                 break;
             case R.id.btnLogShow:
                 startActivity(new Intent(this, LogActivity.class));
-                break;
-            case R.id.btnAccountsSettings:// Accounts Settings Screen
-                startActivity(new Intent(this, AccountsSettingsActivity.class));
                 break;
             case R.id.btnResetWifi:// Reset Wi-fi Settings Screen
                 // Clear out old attempt_ files
@@ -71,9 +69,6 @@ public class SettingsScreenActivity extends AppCompatActivity implements OnClick
                 prepintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(prepintent);
                 break;
-            case R.id.btnMMSSettings:// Notification Sound Settings Screen
-                startActivity(new Intent(this, SettingsMeshMSScreenActivity.class));
-                break;
         }
     }
 
@@ -90,9 +85,6 @@ public class SettingsScreenActivity extends AppCompatActivity implements OnClick
 
         this.findViewById(R.id.btnWifiSettings).setOnClickListener(this);
         this.findViewById(R.id.btnLogShow).setOnClickListener(this);
-        this.findViewById(R.id.btnAccountsSettings).setOnClickListener(this);
         this.findViewById(R.id.btnResetWifi).setOnClickListener(this);
-        this.findViewById(R.id.btnMMSSettings).setOnClickListener(this);
     }
-
 }

@@ -44,7 +44,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:text="@string/WifiSettingsLabel" />
+            android:backgroundTint="@color/colorAccent"
+            android:text="@string/WifiSettingsLabel"
+            android:textColor="#fff" />
 
         <TextView
             android:id="@+id/WifiSettingsText"
@@ -61,32 +63,13 @@
         android:orientation="horizontal">
 
         <Button
-            android:id="@+id/btnAccountsSettings"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:text="@string/AccountsSettingsLabel" />
-
-        <TextView
-            android:id="@+id/AccountsSettingsText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:text="@string/AccountsSettingsText" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <Button
             android:id="@+id/btnLogShow"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:text="@string/LogShowLabel" />
+            android:backgroundTint="@color/colorAccent"
+            android:text="@string/LogShowLabel"
+            android:textColor="#fff" />
 
         <TextView
             android:id="@+id/LogShowText"
@@ -107,7 +90,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:text="@string/ShowResetWifi" />
+            android:backgroundTint="@color/colorAccent"
+            android:text="@string/ShowResetWifi"
+            android:textColor="#fff" />
 
         <TextView
             android:id="@+id/ResetWifiText"
@@ -115,27 +100,6 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:text="@string/ResetWifiText" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/btnMMSSettings"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:text="@string/MMSSettingsLabel" />
-
-        <TextView
-            android:id="@+id/MMSSettingsText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:text="@string/MMSSettingsText" />
 
     </LinearLayout>
 

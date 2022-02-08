@@ -88,21 +88,27 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Open" />
+            android:backgroundTint="@color/colorAccent"
+            android:text="Open"
+            android:textColor="#fff" />
 
         <Button
             android:id="@+id/Save"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Save" />
+            android:backgroundTint="@color/colorAccent"
+            android:text="Save"
+            android:textColor="#fff" />
 
         <Button
             android:id="@+id/Delete"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:backgroundTint="@color/colorAccent"
             android:text="Delete"
+            android:textColor="#fff"
             android:visibility="gone" />
 
         <Button
@@ -110,7 +116,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Cancel" />
+            android:backgroundTint="@color/colorAccent"
+            android:text="Cancel"
+            android:textColor="#fff" />
 
     </LinearLayout>
 

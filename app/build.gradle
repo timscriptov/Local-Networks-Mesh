@@ -33,8 +33,28 @@ android {
             buildConfigField "String", "ManifestId", "\"2BD64BF074A8B0250C72DA7446D580F4D69980C3B13587EAC932E63C256AFF12\"";
         }
     }
-
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/notice.txt'
+        exclude 'META-INF/ASL2.0'
+        exclude 'META-INF/INDEX.LIST'
+        exclude("META-INF/*.kotlin_module")
+        exclude 'META-INF/androidx**version'
+        exclude 'firebase**properties'
+        exclude 'play-services**properties'
+        exclude 'play-services**properties'
+        exclude 'androidsupportmultidexversion.txt'
+        exclude 'fabric/*'
+    }
     lintOptions {
+        checkReleaseBuilds false
+        // Or, if you prefer, you can continue to check for errors in release builds,
+        // but continue the build even when errors are found:
         abortOnError false
     }
 
@@ -49,12 +69,15 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     testImplementation 'junit:junit:4.13.2'
     implementation project(':expansionpanel')
+
     //noinspection GradleDependency
     implementation 'commons-io:commons-io:2.3'
-    //implementation 'com.google.android.gms:play-services-location:16.0.0'
-    //implementation 'com.android.support:support-v4:28.0.0'
+
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.appcompat:appcompat:1.4.1'
-    implementation 'com.google.android.material:material:1.5.0'
     implementation 'androidx.browser:browser:1.4.0'
+
+    implementation 'com.google.android.material:material:1.5.0'
+
+    implementation 'org.apache.httpcomponents:httpclient:4.5.13'
 }

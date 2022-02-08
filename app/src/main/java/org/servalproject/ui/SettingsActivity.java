@@ -31,8 +31,8 @@ public class SettingsActivity extends PreferenceActivity {
 
     public Preference notificationSound;
     public Preference resetDetails;
-    public Preference meshTesting;
-    public Preference viewLogs;
+    //public Preference meshTesting;
+    //public Preference viewLogs;
     public Preference help;
     public Preference website;
 
@@ -161,7 +161,7 @@ public class SettingsActivity extends PreferenceActivity {
             }
         });
 
-        meshTesting = findPreference("meshTesting");
+        /*meshTesting = findPreference("meshTesting");
         meshTesting.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference p1) {
@@ -193,7 +193,7 @@ public class SettingsActivity extends PreferenceActivity {
                 startActivity(new Intent(SettingsActivity.this, LogActivity.class));
                 return true;
             }
-        });
+        });*/
 
         // TODO Открыть в браузере........
         help = findPreference("help");

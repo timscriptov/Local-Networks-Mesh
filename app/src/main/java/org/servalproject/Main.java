@@ -63,6 +63,7 @@ import org.servalproject.servald.ServalD;
 import org.servalproject.servaldna.keyring.KeyringIdentity;
 import org.servalproject.ui.CompassActivity;
 import org.servalproject.ui.Networks;
+import org.servalproject.ui.ScanActivity;
 import org.servalproject.ui.SettingsActivity;
 import org.servalproject.ui.ShareUsActivity;
 import org.servalproject.utils.Utils;
@@ -232,6 +233,8 @@ public class Main extends AppCompatActivity implements View.OnClickListener, Sur
                         Networks.class));
                 break;
             case R.id.ipScanerLabel:
+                startActivity(new Intent(getApplicationContext(),
+                        ScanActivity.class));
                 break;
         }
     }
@@ -295,14 +298,14 @@ public class Main extends AppCompatActivity implements View.OnClickListener, Sur
 
         if (mCamera == null) {
             Log.d(TAG, "mCamera is null.");
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            /*AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setMessage(R.string.not_supported);
             builder.setPositiveButton(R.string.exit, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int which) {
                     finish();
                 }
             });
-            builder.show();
+            builder.show();*/
             return;
         }
 

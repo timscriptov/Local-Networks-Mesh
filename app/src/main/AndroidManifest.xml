@@ -195,6 +195,12 @@
             android:taskAffinity="org.servalproject.Call" />
 
         <activity
+            android:name=".ui.ScanActivity"
+            android:excludeFromRecents="true"
+            android:screenOrientation="portrait"
+            android:taskAffinity="org.servalproject.Call" />
+
+        <activity
             android:name=".batphone.UnsecuredCall"
             android:excludeFromRecents="true"
             android:launchMode="singleTask"

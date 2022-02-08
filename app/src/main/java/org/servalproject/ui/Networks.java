@@ -236,7 +236,8 @@ public class Networks extends AppCompatActivity implements CompoundButton.OnChec
             nm.control.off(null);
         }
     };
-    private NetworkControl Adhoc = new NetworkControl() {
+
+    /*private NetworkControl Adhoc = new NetworkControl() {
 
         @Override
         CharSequence getTitle() {
@@ -316,7 +317,8 @@ public class Networks extends AppCompatActivity implements CompoundButton.OnChec
             if (testDialog())
                 super.clicked();
         }
-    };
+    };*/
+
     private NetworkControl Commotion = new NetworkControl() {
         @Override
         CharSequence getTitle() {
@@ -460,16 +462,19 @@ public class Networks extends AppCompatActivity implements CompoundButton.OnChec
 
         this.app = (ServalBatPhoneApplication) this.getApplication();
         this.nm = app.nm;
-        adapter = new SimpleAdapter<NetworkControl>(this, binder);
+        adapter = new SimpleAdapter<>(this, binder);
         List<NetworkControl> data = new ArrayList<NetworkControl>();
-        if (app.nm.blueToothControl != null)
+        if (app.nm.blueToothControl != null) {
             data.add(this.Bluetooth);
+        }
         data.add(this.WifiClient);
-        if (nm.control.wifiApManager != null)
+        if (nm.control.wifiApManager != null) {
             data.add(this.HotSpot);
-        data.add(this.Adhoc);
-        if (CommotionAdhoc.isInstalled())
+        }
+        //data.add(this.Adhoc);
+        if (CommotionAdhoc.isInstalled()) {
             data.add(this.Commotion);
+        }
         adapter.setItems(data);
         listView.setAdapter(adapter);
     }

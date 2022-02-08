@@ -172,4 +172,14 @@
     <string name="pref_summary_reset_details">Очистить свои данные</string>
 
     <string name="not_supported">Sorry, you\'re device is not supported :(</string>
+
+    <string name="title_activity_display_device">DisplayDevice</string>
+    <string name="scanning">Scanning</string>
+    <string name="scanning_your_network">scanning your network</string>
+    <string name="not_connected_error">Not connected to wifi, no scanning permitted</string>
+    <string name="ipLabel">Ip Address:</string>
+    <string name="mac_label">Mac Address:</string>
+    <string name="deviceName">Название:</string>
+    <string name="ipPlaceholder">DeviceIp</string>
+    <string name="macHolder">MacAddress</string>
 </resources>

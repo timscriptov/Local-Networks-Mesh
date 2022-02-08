@@ -43,7 +43,7 @@
 
     <PreferenceCategory android:title="Others">
 
-        <Preference
+        <!-- Preference
             android:key="meshTesting"
             android:summary="@string/ResetWifiText"
             android:title="@string/ShowResetWifi" />
@@ -51,7 +51,7 @@
         <Preference
             android:key="viewLogs"
             android:summary="@string/LogShowText"
-            android:title="@string/LogShowLabel" />
+            android:title="@string/LogShowLabel" / -->
 
         <Preference
             android:key="website"

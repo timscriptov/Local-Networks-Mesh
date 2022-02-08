@@ -11,21 +11,19 @@ import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
-import android.support.v7.widget.AppCompatTextView;
-import android.support.v7.widget.Toolbar;
-import android.util.Log;
+import androidx.appcompat.widget.AppCompatTextView;
+import androidx.appcompat.widget.Toolbar;
+
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import org.servalproject.LogActivity;
 import org.servalproject.PreparationWizard;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.servaldna.keyring.KeyringIdentity;
-import org.servalproject.ui.help.HtmlHelp;
+import org.servalproject.ui.help.HtmlHelpActivity;
 
 import java.io.File;
 
@@ -197,13 +195,15 @@ public class SettingsActivity extends PreferenceActivity {
             }
         });
 
+        // TODO Открыть в браузере........
         help = findPreference("help");
         help.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference p1) {
                 Intent intent = new Intent(getApplicationContext(),
-                        HtmlHelp.class);
-                intent.putExtra("page", "helpindex.html");
+                        HtmlHelpActivity.class);
+                intent.putExtra("extra.url", "helpindex.html");
+                intent.putExtra("extra.title", "Помощь");
                 startActivity(intent);
                 return true;
             }
@@ -214,8 +214,9 @@ public class SettingsActivity extends PreferenceActivity {
             @Override
             public boolean onPreferenceClick(Preference p1) {
                 Intent intent = new Intent(getApplicationContext(),
-                        HtmlHelp.class);
-                intent.putExtra("page", "index.html");
+                        HtmlHelpActivity.class);
+                intent.putExtra("extra.url", "index.html");
+                intent.putExtra("extra.title", "Документация");
                 startActivity(intent);
                 return true;
             }

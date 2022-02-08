@@ -170,4 +170,6 @@
     <string name="sotw_southwest">ЮЗ</string>
     <string name="compassLabel">Компас</string>
     <string name="pref_summary_reset_details">Очистить свои данные</string>
+
+    <string name="not_supported">Sorry, you\'re device is not supported :(</string>
 </resources>

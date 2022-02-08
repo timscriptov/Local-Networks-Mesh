@@ -176,4 +176,7 @@
     <string name="sotw_southwest">SW</string>
     <string name="compassLabel">Compass</string>
     <string name="pref_summary_reset_details">Clear Data</string>
+
+    <string name="not_supported">Sorry, you\'re device is not supported :(</string>
+    <string name="exit">Exit</string>
 </resources>

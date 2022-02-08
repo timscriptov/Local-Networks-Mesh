@@ -89,6 +89,11 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.FLASHLIGHT" />
+
+    <uses-feature android:name="android.hardware.camera.flash" />
+
     <!-- uses features -->
     <uses-feature
         android:name="android.hardware.camera"
@@ -170,7 +175,7 @@
             android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.help.HtmlHelp"
+            android:name=".ui.help.HtmlHelpActivity"
             android:launchMode="singleTop"
             android:screenOrientation="portrait" />
 
@@ -347,11 +352,19 @@
                 <data android:scheme="smsto" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".ui.ContactsActivity"
-            android:label="@string/contactsLabel"
-            android:launchMode="singleTop"
-            android:screenOrientation="portrait" />
+        <receiver
+            android:name=".ui.flashlight.FlashlightAppWidgetProvider"
+            android:exported="false" >
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_provider" />
+        </receiver>
+
+        <service android:name=".ui.flashlight.FlashlightIntentService" />
 
     </application>
 

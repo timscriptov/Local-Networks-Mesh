@@ -23,7 +23,7 @@
     android:layout_height="fill_parent"
     android:orientation="vertical">
 
-    <android.support.v7.widget.Toolbar
+    <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
@@ -31,7 +31,7 @@
         android:popupTheme="@style/ThemeOverlay.AppCompat"
         android:theme="@style/ThemeOverlay.AppCompat.ActionBar" />
 
-    <android.support.v7.widget.CardView
+    <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="10dp"
@@ -143,9 +143,9 @@
 
         </com.mcal.expansionpanel.ExpansionLayout>
 
-    </android.support.v7.widget.CardView>
+    </androidx.cardview.widget.CardView>
 
-    <android.support.v7.widget.CardView
+    <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="10dp"
@@ -171,7 +171,7 @@
                 <ImageView
                     android:id="@+id/contactsLabel"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="50dp"
                     android:layout_weight="1"
                     android:contentDescription="@string/callLabel"
                     android:src="@drawable/ic_launcher_call" />
@@ -179,7 +179,7 @@
                 <ImageView
                     android:id="@+id/messageLabel"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="50dp"
                     android:layout_weight="1"
                     android:contentDescription="@string/messageLabel"
                     android:src="@drawable/ic_launcher_message" />
@@ -187,7 +187,7 @@
                 <ImageView
                     android:id="@+id/sharingLabel"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="50dp"
                     android:layout_weight="1"
                     android:contentDescription="@string/sharingLabel"
                     android:src="@drawable/ic_launcher_sharing" />
@@ -235,7 +235,7 @@
                 <ImageView
                     android:id="@+id/mapsLabel"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="50dp"
                     android:layout_weight="1"
                     android:contentDescription="@string/mapsLabel"
                     android:src="@drawable/ic_launcher_map" />
@@ -243,7 +243,7 @@
                 <ImageView
                     android:id="@+id/compassLabel"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="50dp"
                     android:layout_weight="1"
                     android:contentDescription="Compass"
                     android:src="@drawable/ic_shortcut_compass_calibration" />
@@ -251,7 +251,7 @@
                 <ImageView
                     android:id="@+id/servalLabel"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="50dp"
                     android:layout_weight="1"
                     android:contentDescription="@string/servalLabel"
                     android:src="@drawable/ic_launcher_share_us" />
@@ -296,18 +296,31 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
 
-                <ImageView
-                    android:id="@+id/flashlightLabel"
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="50dp"
                     android:layout_weight="1"
-                    android:contentDescription="flashlight"
-                    android:src="@drawable/ic_shortcut_lightbulb_outline" />
+                    android:gravity="center">
+
+                    <SurfaceView
+                        android:id="@+id/surface_view"
+                        android:layout_width="1dp"
+                        android:layout_height="1dp" />
+
+                    <ToggleButton
+                        android:id="@+id/light_switch"
+                        android:layout_width="50dp"
+                        android:layout_height="50dp"
+                        android:background="@drawable/toggle_button_state"
+                        android:textOff="@null"
+                        android:textOn="@null" />
+
+                </LinearLayout>
 
                 <ImageView
                     android:id="@+id/powerLabel"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="50dp"
                     android:layout_weight="1"
                     android:contentDescription="@string/powerLabel"
                     android:src="@drawable/ic_launcher_power" />
@@ -315,7 +328,7 @@
                 <ImageView
                     android:id="@+id/ipScanerLabel"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="50dp"
                     android:layout_weight="1"
                     android:contentDescription="IP Сканер"
                     android:src="@drawable/ic_shortcut_scanner" />
@@ -357,9 +370,9 @@
 
         </LinearLayout>
 
-    </android.support.v7.widget.CardView>
+    </androidx.cardview.widget.CardView>
 
-    <android.support.v7.widget.CardView
+    <androidx.cardview.widget.CardView
         android:id="@+id/dex_protect_features"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -391,7 +404,7 @@
 
         </LinearLayout>
 
-    </android.support.v7.widget.CardView>
+    </androidx.cardview.widget.CardView>
 
     <!--   	<Button -->
     <!-- 		 android:id="@+id/btnDonate" -->

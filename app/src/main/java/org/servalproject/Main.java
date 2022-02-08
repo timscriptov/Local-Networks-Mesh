@@ -31,6 +31,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
+import android.hardware.Camera;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -40,16 +41,21 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.rhizome.RhizomeMain;
@@ -59,10 +65,10 @@ import org.servalproject.ui.CompassActivity;
 import org.servalproject.ui.Networks;
 import org.servalproject.ui.SettingsActivity;
 import org.servalproject.ui.ShareUsActivity;
-import org.servalproject.ui.help.HtmlHelp;
 import org.servalproject.utils.Utils;
 import org.servalproject.wizard.Wizard;
 
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Locale;
 
@@ -78,7 +84,7 @@ import java.util.Locale;
  * @author Jeremy Lakeman <jeremy@servalproject.org>
  * @author Romana Challans <romana@servalproject.org>
  */
-public class Main extends AppCompatActivity implements View.OnClickListener {
+public class Main extends AppCompatActivity implements View.OnClickListener, SurfaceHolder.Callback {
     private static final String TAG = "Main";
     private static final int PERMISSION_REQUEST = 1;
     private static final int PEER_LIST_RETURN = 0;
@@ -99,7 +105,6 @@ public class Main extends AppCompatActivity implements View.OnClickListener {
 
     private LocationManager locManager;
     private Location lastLocation;
-
     private final LocationListener locListener = new LocationListener() {
         public void onLocationChanged(Location loc) {
             updateLocation(loc);
@@ -116,7 +121,10 @@ public class Main extends AppCompatActivity implements View.OnClickListener {
         public void onStatusChanged(String provider, int status, Bundle extras) {
         }
     };
-
+    private Camera mCamera;
+    private ToggleButton mLightSwitch;
+    private SurfaceView mSurfaceView;
+    private SurfaceHolder mSurfaceHolder;
     private Drawable powerOffDrawable;
     BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
@@ -147,9 +155,15 @@ public class Main extends AppCompatActivity implements View.OnClickListener {
     // Кнопка открытия карт
     private void openMaps() {
         if (Utils.isInstalled(this, "com.google.android.apps.maps")) {
-            // Если есть карты открыть
-            Uri gmmIntentUri = Uri.parse("geo:37.7749,-122.4194");
-            Intent i = new Intent(android.content.Intent.ACTION_VIEW, gmmIntentUri);
+            Intent i;
+            if (lastLocation == null) {
+                i = new Intent(android.content.Intent.ACTION_VIEW);
+            } else {
+                Uri gmmIntentUri = Uri.parse(formatLocation(lastLocation, "geo:{0},{1}"));
+                ;
+                i = new Intent(android.content.Intent.ACTION_VIEW, gmmIntentUri);
+            }
+
             i.setPackage("com.google.android.apps.maps");
             startActivity(i);
         } else {
@@ -209,8 +223,10 @@ public class Main extends AppCompatActivity implements View.OnClickListener {
                         ShareUsActivity.class));
                 break;
 
-            case R.id.flashlightLabel:
-                break;
+            //case R.id.flashlightLabel:
+            //    startActivity(new Intent(getApplicationContext(),
+            //            FlashlightActivity.class));
+            //    break;
             case R.id.powerLabel:
                 startActivity(new Intent(getApplicationContext(),
                         Networks.class));
@@ -220,6 +236,7 @@ public class Main extends AppCompatActivity implements View.OnClickListener {
         }
     }
 
+    @SuppressLint("UseCompatLoadingForDrawables")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -265,13 +282,50 @@ public class Main extends AppCompatActivity implements View.OnClickListener {
                 R.id.sharingLabel,
                 R.id.servalLabel,
 
-                R.id.flashlightLabel,
+                //R.id.flashlightLabel,
                 R.id.powerLabel,
                 R.id.ipScanerLabel,
         };
         for (int i = 0; i < listenTo.length; i++) {
             this.findViewById(listenTo[i]).setOnClickListener(this);
         }
+
+        mCamera = Camera.open();
+        mLightSwitch = (ToggleButton) findViewById(R.id.light_switch);
+
+        if (mCamera == null) {
+            Log.d(TAG, "mCamera is null.");
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage(R.string.not_supported);
+            builder.setPositiveButton(R.string.exit, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
+                    finish();
+                }
+            });
+            builder.show();
+            return;
+        }
+
+        mSurfaceView = (SurfaceView) findViewById(R.id.surface_view);
+        mSurfaceHolder = mSurfaceView.getHolder();
+        mSurfaceHolder.addCallback(this);
+
+        Camera.Parameters parameters = mCamera.getParameters();
+        parameters.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+        mCamera.setParameters(parameters);
+
+        mLightSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    mCamera.startPreview();
+                } else {
+                    mCamera.stopPreview();
+                }
+            }
+        });
+
+        mLightSwitch.setChecked(false);
     }
 
     @Override
@@ -613,6 +667,32 @@ public class Main extends AppCompatActivity implements View.OnClickListener {
     private String formatLocation(Location location, String format) {
         return MessageFormat.format(format,
                 getLatitude(location), getLongitude(location));
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if (mCamera != null) {
+            mCamera.release();
+        }
+    }
+
+    @Override
+    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+    }
+
+    @Override
+    public void surfaceCreated(SurfaceHolder holder) {
+        try {
+            mCamera.setPreviewDisplay(holder);
+        } catch (IOException e) {
+            Log.e(TAG, "Sigh", e);
+        }
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder holder) {
     }
 
     // ----------------------------------------------------

@@ -5,6 +5,7 @@ import android.view.ViewGroup;
 import android.view.View;
 import android.view.LayoutInflater;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -17,12 +18,8 @@ import java.util.List;
  * Created by dan on 10/22/14.
  */
 public class NetDeviceAdapter extends RecyclerView.Adapter<NetDeviceAdapter.ViewHolder> {
-
-
     private List<Device> addresses;
-    private int rowLayout;
-
-
+    private final int rowLayout;
 
     private Context mContext;
 
@@ -31,7 +28,6 @@ public class NetDeviceAdapter extends RecyclerView.Adapter<NetDeviceAdapter.View
         this.rowLayout = rowLayout;
         this.mContext = mContext;
     }
-
 
     @Override
     public NetDeviceAdapter.ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
@@ -45,7 +41,6 @@ public class NetDeviceAdapter extends RecyclerView.Adapter<NetDeviceAdapter.View
         viewHolder.deviceName.setText(address.getDeviceName());
         viewHolder.deviceIp.setText(address.getIpAddress());
         viewHolder.macAdd.setText(address.getMacAddress());
-
     }
 
     @Override
@@ -77,11 +72,11 @@ public class NetDeviceAdapter extends RecyclerView.Adapter<NetDeviceAdapter.View
         this.mContext = mContext;
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder{
-
+    public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         public TextView deviceName;
         public TextView deviceIp;
         public TextView macAdd;
+
 
         public ViewHolder(View itemView) {
             super(itemView);
@@ -89,6 +84,27 @@ public class NetDeviceAdapter extends RecyclerView.Adapter<NetDeviceAdapter.View
             deviceIp = (TextView) itemView.findViewById(R.id.deviceIp);
             macAdd = (TextView)itemView.findViewById(R.id.macAdd);
         }
-    }
 
+        @Override
+        public void onClick(View view) {
+            Toast.makeText(view.getContext(), "position = " + getLayoutPosition(), Toast.LENGTH_SHORT).show();
+
+            //go through each item if you have few items within recycler view
+            /*if (getLayoutPosition() == 0) {
+
+
+            } else if (getLayoutPosition() == 1) {
+                //Do whatever you want here
+
+            } else if (getLayoutPosition() == 2) {
+
+            } else if (getLayoutPosition() == 3) {
+
+            } else if (getLayoutPosition() == 4) {
+
+            } else if (getLayoutPosition() == 5) {
+
+            }*/
+        }
+    }
 }

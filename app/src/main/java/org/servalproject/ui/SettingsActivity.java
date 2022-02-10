@@ -29,7 +29,7 @@ import java.io.File;
 
 public class SettingsActivity extends PreferenceActivity {
 
-    public Preference notificationSound;
+    //public Preference notificationSound;
     public Preference resetDetails;
     //public Preference meshTesting;
     //public Preference viewLogs;
@@ -63,7 +63,7 @@ public class SettingsActivity extends PreferenceActivity {
         bindPreferenceSummaryToValue(findPreference("prefLinkType"));
         bindPreferenceSummaryToValue(findPreference("streamType"));
 
-        notificationSound = findPreference("notificationSound");
+        /*notificationSound = findPreference("notificationSound");
         notificationSound.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference p1) {
@@ -88,7 +88,7 @@ public class SettingsActivity extends PreferenceActivity {
                 startActivityForResult(intent, RINGTONE_PICKER_ACTIVITY);
                 return true;
             }
-        });
+        });*/
 
         resetDetails = findPreference("resetDetails");
         resetDetails.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {

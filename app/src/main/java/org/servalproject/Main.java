@@ -50,6 +50,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -98,7 +99,13 @@ public class Main extends AppCompatActivity implements View.OnClickListener, Sur
     private Button gpsButton;
     private TextView progressTitle;
     private ProgressBar progressBar;
-    private TextView detailsText;
+
+    private LinearLayout details;
+    private TextView latitude;
+    private TextView longitude;
+    private TextView altitude;
+    private TextView speed;
+
 
     private ImageView shareButton;
     private ImageView copyButton;
@@ -253,7 +260,13 @@ public class Main extends AppCompatActivity implements View.OnClickListener, Sur
         gpsButton = findViewById(R.id.gpsButton);
         progressTitle = findViewById(R.id.progressTitle);
         progressBar = findViewById(R.id.progressBar);
-        detailsText = findViewById(R.id.detailsText);
+
+        // GPS
+        details = findViewById(R.id.details);
+        latitude = findViewById(R.id.latitude);
+        longitude = findViewById(R.id.longitude);
+        altitude = findViewById(R.id.altitude);
+        speed = findViewById(R.id.speed);
 
         // Button area
         shareButton = findViewById(R.id.shareButton);
@@ -458,7 +471,7 @@ public class Main extends AppCompatActivity implements View.OnClickListener, Sur
         gpsButton.setVisibility(locationEnabled ? View.GONE : View.VISIBLE);
         //progressTitle.setVisibility(waitingForLocation ? View.VISIBLE : View.GONE);
         progressBar.setVisibility(waitingForLocation ? View.VISIBLE : View.GONE);
-        detailsText.setVisibility(haveLocation ? View.VISIBLE : View.GONE);
+        details.setVisibility(haveLocation ? View.VISIBLE : View.GONE);
 
         // Update buttons
         shareButton.setEnabled(haveLocation);
@@ -466,13 +479,11 @@ public class Main extends AppCompatActivity implements View.OnClickListener, Sur
         viewButton.setEnabled(haveLocation);
 
         if (haveLocation) {
-            String newline = System.getProperty("line.separator");
-            detailsText.setText(//String.format("%s: %s%s%s: %s (%s)%s%s: %s (%s)",
-                    getString(R.string.accuracy) + ": " + getAccuracy(location) + newline +
-                            getString(R.string.altitude) + ": " + getAltitude(location) + newline +
-                            getString(R.string.speed) + ": " + getSpeed(location) + newline +
-                            getString(R.string.latitude) + ": " + getLatitude(location) + "(" + getDMSLatitude(location) + ")" + newline +
-                            getString(R.string.longitude) + ": " + getLongitude(location) + "(" + getDMSLongitude(location) + ")");
+            //getString(R.string.accuracy) + ": " + getAccuracy(location) .. Ещчность
+            altitude.setText(getString(R.string.altitude) + ": " + getAltitude(location));
+            speed.setText(getString(R.string.speed) + ": " + getSpeed(location));
+            latitude.setText(getString(R.string.latitude) + ": " + getLatitude(location));
+            longitude.setText(getString(R.string.longitude) + ": " + getLongitude(location));
 
             lastLocation = location;
         }

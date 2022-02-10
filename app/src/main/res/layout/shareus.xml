@@ -43,6 +43,8 @@
 
     <TextView
         android:id="@+id/share_wifi"
+        android:linksClickable="true"
+        android:autoLink="web"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/share_wifi_off" />

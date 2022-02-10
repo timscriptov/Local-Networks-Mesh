@@ -25,10 +25,10 @@
             android:summary="Выберите звуковой поток для общения по телефону"
             android:title="@string/pref_title_stream_type" />
 
-        <Preference
+        <!-- Preference
             android:key="notificationSound"
             android:summary="@string/MMSSettings_NotifSoundText"
-            android:title="@string/MMSSettings_NotifSoundLabel" />
+            android:title="@string/MMSSettings_NotifSoundLabel" / -->
 
     </PreferenceCategory>
 

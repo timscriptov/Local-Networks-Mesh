@@ -39,7 +39,7 @@ public class NetDeviceAdapter extends RecyclerView.Adapter<NetDeviceAdapter.View
     public void onBindViewHolder(NetDeviceAdapter.ViewHolder viewHolder, int i) {
         Device address = addresses.get(i);
         viewHolder.deviceName.setText(address.getDeviceName());
-        viewHolder.deviceIp.setText(address.getIpAddress());
+        viewHolder.deviceIp.setText("https://" + address.getIpAddress());
         viewHolder.macAdd.setText(address.getMacAddress());
     }
 

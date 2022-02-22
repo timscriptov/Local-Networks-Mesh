@@ -20,10 +20,14 @@
 
 package org.servalproject.rhizome;
 
+import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.wifi.WifiInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -45,7 +49,13 @@ import org.servalproject.servaldna.ServalDCommand;
 import org.servalproject.servaldna.ServalDFailureException;
 
 import java.math.BigDecimal;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.text.NumberFormat;
+import java.util.Enumeration;
 
 /**
  * Rhizome list activity.  Presents the contents of the Rhizome store as a list of names.
@@ -54,6 +64,7 @@ import java.text.NumberFormat;
  */
 public class RhizomeMain extends AppCompatActivity implements OnClickListener {
     private static final String TAG = "RhizomeMain";
+    TextView shareWifi;
     // some size constants
     BigDecimal gb = new BigDecimal(1073741824);
     BigDecimal mb = new BigDecimal(1048576);
@@ -110,6 +121,9 @@ public class RhizomeMain extends AppCompatActivity implements OnClickListener {
         this.findViewById(R.id.rhizome_share).setOnClickListener(this);
         this.findViewById(R.id.rhizome_find).setOnClickListener(this);
         this.findViewById(R.id.rhizome_saved).setOnClickListener(this);
+
+        shareWifi = findViewById(R.id.share_wifi);
+        updateHelpText();
     }
 
     @Override
@@ -118,9 +132,26 @@ public class RhizomeMain extends AppCompatActivity implements OnClickListener {
         super.onResume();
     }
 
+    public static String getLocalIpAddress() {
+        try {
+            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements(); ) {
+                NetworkInterface intf = en.nextElement();
+                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements(); ) {
+                    InetAddress inetAddress = enumIpAddr.nextElement();
+                    if (!inetAddress.isLoopbackAddress() && inetAddress instanceof Inet4Address) {
+                        return inetAddress.getHostAddress();
+                    }
+                }
+            }
+        } catch (SocketException ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
     private void setupFreeSpace() {
-        ProgressBar progressBar = (ProgressBar) findViewById(R.id.progress_bar);
-        TextView progressLabel = (TextView) findViewById(R.id.progress_label);
+        ProgressBar progressBar = findViewById(R.id.progress_bar);
+        TextView progressLabel = findViewById(R.id.progress_label);
 
         String state = Environment.getExternalStorageState();
         // checks if the SD card is attached to the Android device
@@ -170,6 +201,55 @@ public class RhizomeMain extends AppCompatActivity implements OnClickListener {
             progressLabel.setTextColor(Color.RED);
             progressLabel.setText("SD card not found! SD card is \""
                     + state + "\".");
+        }
+    }
+
+    private void updateHelpText() {
+        ServalBatPhoneApplication app = (ServalBatPhoneApplication) this
+                .getApplication();
+
+        String ssid = null;
+        InetAddress addr = null;
+
+        try {
+            if (app.nm.control.wifiManager.isWifiEnabled()) {
+                NetworkInfo networkInfo = app.nm.control.connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+                WifiInfo connection = app.nm.control.wifiManager.getConnectionInfo();
+                if (networkInfo != null && networkInfo.isConnected() && connection != null) {
+                    int iAddr = connection.getIpAddress();
+                    addr = Inet4Address.getByAddress(new byte[]{
+                            (byte) iAddr,
+                            (byte) (iAddr >> 8),
+                            (byte) (iAddr >> 16),
+                            (byte) (iAddr >> 24),
+                    });
+                    ssid = connection.getSSID();
+                }
+                String helpText = null;
+                if (addr != null && ssid != null && app.webServer != null) {
+                    helpText = "http://" + addr.getHostAddress() + ":" + app.webServer.port + "/";
+                } else {
+                    helpText = getString(R.string.share_wifi_off);
+                }
+                shareWifi.setText(helpText);
+            } else/* if (app.nm.control.wifiApManager.isWifiApEnabled())*/ {
+                /*WifiConfiguration conf = app.nm.control.wifiApManager.getWifiApConfiguration();
+                if (conf != null && conf.SSID != null)
+                    ssid = conf.SSID;
+
+                // TODO FIXME get the real AP network address
+                addr = Inet4Address.getByAddress(new byte[]{
+                        (byte) 192, (byte) 168, 43, 1,
+                });*/
+
+                AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+                dialog.setTitle("Warning");
+                dialog.setMessage("Подключитесь к Wi-Fi!");//# теперь что скомпилировать
+                dialog.setPositiveButton("Ок", null);
+                dialog.show();
+            }
+        } catch (UnknownHostException e) {
+            Log.e(TAG, e.getMessage(), e);
         }
     }
 

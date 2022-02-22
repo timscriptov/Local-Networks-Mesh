@@ -46,10 +46,15 @@ public class HtmlHelpActivity extends AppCompatActivity {
         String url = "file:///android_asset/" + getIntent().getStringExtra(EXTRA_URL);
         String title = getIntent().getStringExtra(EXTRA_TITLTE);
 
-        WebView webView = (WebView)findViewById(R.id.webview);
+        WebView webView = findViewById(R.id.webview);
         webView.setWebViewClient(new WebViewClient());
+
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
+
+        webSettings.setSupportZoom(true);
+        webSettings.setBuiltInZoomControls(true);
+
         setTitle(title);
         //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         webView.loadUrl(url);

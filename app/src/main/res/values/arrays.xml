@@ -11,7 +11,7 @@
     <string-array name="link_values" translatable="false">
         <item>https://maps.google.com/?q={0},{1}</item>
         <item>https://openstreetmap.org/?mlat={0}&amp;mlon={1}</item>
-        <item>geo:{0},{1}</item>
+        <!--item>geo:{0},{1}</item -->
         <item>{0}, {1}</item>
         <item>@string/always_ask</item>
     </string-array>
@@ -19,7 +19,7 @@
     <string-array name="link_entries">
         <item>@string/googlemaps</item>
         <item>@string/openstreetmap</item>
-        <item>@string/geouri</item>
+        <!-- item>@string/geouri</item -->
         <item>@string/decimal</item>
         <item>@string/always_ask</item>
     </string-array>

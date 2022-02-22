@@ -22,6 +22,7 @@ package org.servalproject;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -31,47 +32,57 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
-import android.hardware.Camera;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.ToggleButton;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDialog;
+import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
+import org.apache.http.conn.util.InetAddressUtils;
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.rhizome.RhizomeMain;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servaldna.keyring.KeyringIdentity;
-import org.servalproject.ui.CompassActivity;
 import org.servalproject.ui.Networks;
-import org.servalproject.ui.ScanActivity;
 import org.servalproject.ui.SettingsActivity;
-import org.servalproject.ui.ShareUsActivity;
+import org.servalproject.ui.scan.NetDeviceAdapter;
+import org.servalproject.ui.scan.Pinger;
+import org.servalproject.ui.scan.model.Device;
 import org.servalproject.utils.Utils;
 import org.servalproject.wizard.Wizard;
 
-import java.io.IOException;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -86,31 +97,27 @@ import java.util.Locale;
  * @author Jeremy Lakeman <jeremy@servalproject.org>
  * @author Romana Challans <romana@servalproject.org>
  */
-public class Main extends AppCompatActivity implements View.OnClickListener, SurfaceHolder.Callback {
+public class Main extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = "Main";
     private static final int PERMISSION_REQUEST = 1;
     private static final int PEER_LIST_RETURN = 0;
+    private final NetDeviceAdapter adapter = new NetDeviceAdapter(new ArrayList<>(15), R.layout.device_fragment, this);
     public ServalBatPhoneApplication app;
     boolean registered = false;
     private TextView buttonToggle;
     private ImageView buttonToggleImg;
     private Drawable powerOnDrawable;
-
     private Button gpsButton;
     private TextView progressTitle;
     private ProgressBar progressBar;
-
     private LinearLayout details;
     private TextView latitude;
     private TextView longitude;
     private TextView altitude;
     private TextView speed;
-
-
     private ImageView shareButton;
     private ImageView copyButton;
     private ImageView viewButton;
-
     private LocationManager locManager;
     private Location lastLocation;
     private final LocationListener locListener = new LocationListener() {
@@ -129,10 +136,6 @@ public class Main extends AppCompatActivity implements View.OnClickListener, Sur
         public void onStatusChanged(String provider, int status, Bundle extras) {
         }
     };
-    private Camera mCamera;
-    private ToggleButton mLightSwitch;
-    private SurfaceView mSurfaceView;
-    private SurfaceHolder mSurfaceHolder;
     private Drawable powerOffDrawable;
     BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
@@ -143,6 +146,13 @@ public class Main extends AppCompatActivity implements View.OnClickListener, Sur
             stateChanged(state);
         }
     };
+
+    public static String intToIp(int i) {
+        return ((i >> 24) & 0xFF) + "." +
+                ((i >> 16) & 0xFF) + "." +
+                ((i >> 8) & 0xFF) + "." +
+                (i & 0xFF);
+    }
 
     private static Double getDistance(Location one, Location two) {
         int R = 6371000;
@@ -158,6 +168,19 @@ public class Main extends AppCompatActivity implements View.OnClickListener, Sur
 
     private static double toRad(Double d) {
         return d * Math.PI / 180;
+    }
+
+    private void rescan() {
+
+        ConnectivityManager connManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+        NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+
+        if (mWifi.isConnected() && mWifi.isAvailable()) {
+            AsyncScan scan = new AsyncScan(this);
+            scan.execute(adapter);
+        } else {
+            Toast.makeText(this, getString(R.string.not_connected_error), Toast.LENGTH_LONG).show();
+        }
     }
 
     // Кнопка открытия карт
@@ -191,10 +214,6 @@ public class Main extends AppCompatActivity implements View.OnClickListener, Sur
         }
     }
 
-    //-----------------------------------------------------
-    // Menu related methods
-    //-----------------------------------------------------
-
     @Override
     public void onClick(View view) {
         // Do nothing until upgrade finished.
@@ -218,17 +237,13 @@ public class Main extends AppCompatActivity implements View.OnClickListener, Sur
                 openMaps();
                 break;
 
-            case R.id.compassLabel:
+            /*case R.id.compassLabel:
                 startActivity(new Intent(getApplicationContext(),
                         CompassActivity.class));
-                break;
-            case R.id.sharingLabel:
-                startActivity(new Intent(getApplicationContext(),
-                        RhizomeMain.class));
-                break;
+                break;*/
             case R.id.servalLabel:
                 startActivity(new Intent(getApplicationContext(),
-                        ShareUsActivity.class));
+                        RhizomeMain.class));
                 break;
 
             //case R.id.flashlightLabel:
@@ -239,12 +254,20 @@ public class Main extends AppCompatActivity implements View.OnClickListener, Sur
                 startActivity(new Intent(getApplicationContext(),
                         Networks.class));
                 break;
-            case R.id.ipScanerLabel:
+            /*case R.id.ipScanerLabel:
                 startActivity(new Intent(getApplicationContext(),
                         ScanActivity.class));
-                break;
+                break;*/
         }
     }
+
+    public void scan(View v) {
+        rescan();
+    }
+
+    //-----------------------------------------------------
+    // Menu related methods
+    //-----------------------------------------------------
 
     @SuppressLint("UseCompatLoadingForDrawables")
     @Override
@@ -294,54 +317,36 @@ public class Main extends AppCompatActivity implements View.OnClickListener, Sur
                 R.id.messageLabel,
                 R.id.mapsLabel,
 
-                R.id.compassLabel,
-                R.id.sharingLabel,
                 R.id.servalLabel,
 
                 //R.id.flashlightLabel,
-                R.id.powerLabel,
-                R.id.ipScanerLabel,
+                R.id.powerLabel
         };
         for (int i = 0; i < listenTo.length; i++) {
             this.findViewById(listenTo[i]).setOnClickListener(this);
         }
 
-        mCamera = Camera.open();
-        mLightSwitch = (ToggleButton) findViewById(R.id.light_switch);
+        LinearLayout mainLayout = (LinearLayout) findViewById(R.id.mainView);
 
-        if (mCamera == null) {
-            Log.d(TAG, "mCamera is null.");
-            /*AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setMessage(R.string.not_supported);
-            builder.setPositiveButton(R.string.exit, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int which) {
-                    finish();
-                }
-            });
-            builder.show();*/
-            return;
-        }
+        Display display = getWindowManager().getDefaultDisplay();
+        DisplayMetrics outMetrics = new DisplayMetrics();
+        display.getMetrics(outMetrics);
 
-        mSurfaceView = (SurfaceView) findViewById(R.id.surface_view);
-        mSurfaceHolder = mSurfaceView.getHolder();
-        mSurfaceHolder.addCallback(this);
+        float density = getResources().getDisplayMetrics().density;
+        float dpHeight = outMetrics.heightPixels / density;
+        float dpWidth = outMetrics.widthPixels / density;
 
-        Camera.Parameters parameters = mCamera.getParameters();
-        parameters.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
-        mCamera.setParameters(parameters);
+        int numrows = (int) Math.floor(dpWidth / 300);
 
-        mLightSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.list);
 
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    mCamera.startPreview();
-                } else {
-                    mCamera.stopPreview();
-                }
-            }
-        });
+        StaggeredGridLayoutManager manager = new StaggeredGridLayoutManager(numrows, StaggeredGridLayoutManager.VERTICAL);
+        manager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS);
+        recyclerView.setLayoutManager(manager);
+        recyclerView.setHasFixedSize(false);
+        recyclerView.setAdapter(adapter);
 
-        mLightSwitch.setChecked(false);
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
     }
 
     @Override
@@ -479,12 +484,15 @@ public class Main extends AppCompatActivity implements View.OnClickListener, Sur
         viewButton.setEnabled(haveLocation);
 
         if (haveLocation) {
-            //getString(R.string.accuracy) + ": " + getAccuracy(location) .. Ещчность
-            altitude.setText(getString(R.string.altitude) + ": " + getAltitude(location));
-            speed.setText(getString(R.string.speed) + ": " + getSpeed(location));
-            latitude.setText(getString(R.string.latitude) + ": " + getLatitude(location));
-            longitude.setText(getString(R.string.longitude) + ": " + getLongitude(location));
-
+            if (location != null) {
+                if (lastLocation != null) {
+                    //getString(R.string.accuracy) + ": " + getAccuracy(location) .. Ещчность
+                    altitude.setText(getString(R.string.altitude) + ": " + getAltitude(location));
+                    speed.setText(getString(R.string.speed) + ": " + getSpeed(location));
+                    latitude.setText(getString(R.string.latitude) + ": " + getLatitude(location));
+                    longitude.setText(getString(R.string.longitude) + ": " + getLongitude(location));
+                }
+            }
             lastLocation = location;
         }
     }
@@ -686,27 +694,76 @@ public class Main extends AppCompatActivity implements View.OnClickListener, Sur
     @Override
     protected void onDestroy() {
         super.onDestroy();
+    }
 
-        if (mCamera != null) {
-            mCamera.release();
+    private static class AsyncScan extends AsyncTask<NetDeviceAdapter, Void, List<Device>> {
+
+        private ProgressDialog progressDialog;
+        private NetDeviceAdapter adapter;
+
+        public AsyncScan(Context context) {
+            super();
+            progressDialog = new ProgressDialog(context);
         }
-    }
 
-    @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-    }
-
-    @Override
-    public void surfaceCreated(SurfaceHolder holder) {
-        try {
-            mCamera.setPreviewDisplay(holder);
-        } catch (IOException e) {
-            Log.e(TAG, "Sigh", e);
+        public static String getLocalIpv4Address() {
+            try {
+                String ipv4;
+                List<NetworkInterface> nilist = Collections.list(NetworkInterface.getNetworkInterfaces());
+                if (nilist.size() > 0) {
+                    for (NetworkInterface ni : nilist) {
+                        List<InetAddress> ialist = Collections.list(ni.getInetAddresses());
+                        if (ialist.size() > 0) {
+                            for (InetAddress address : ialist) {
+                                if (!address.isLoopbackAddress() && InetAddressUtils.isIPv4Address(ipv4 = address.getHostAddress())) {
+                                    return ipv4;
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (SocketException ex) {
+                ex.printStackTrace();
+            }
+            return "";
         }
-    }
 
-    @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
+        @Override
+        protected List<Device> doInBackground(NetDeviceAdapter... voids) {
+            String ipString = getLocalIpv4Address();
+
+            if (ipString == null) {
+                return new ArrayList<>(1);
+            }
+            int lastdot = ipString.lastIndexOf(".");
+            ipString = ipString.substring(0, lastdot);
+
+            List<Device> addresses = Pinger.getDevicesOnNetwork(ipString);
+            adapter = voids[0];
+            return addresses;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressDialog.setTitle(R.string.scanning);
+            progressDialog.setCancelable(false);
+            progressDialog.show();
+        }
+
+        @SuppressLint("NotifyDataSetChanged")
+        @Override
+        protected void onPostExecute(List<Device> inetAddresses) {
+            super.onPostExecute(inetAddresses);
+            adapter.setAddresses(inetAddresses);
+            adapter.notifyDataSetChanged();
+            progressDialog.dismiss();
+        }
+
+        @Override
+        protected void onProgressUpdate(Void... values) {
+            super.onProgressUpdate(values);
+        }
     }
 
     // ----------------------------------------------------

@@ -35,6 +35,7 @@ public class SettingsActivity extends PreferenceActivity {
     //public Preference viewLogs;
     public Preference help;
     public Preference website;
+    public Preference shareApp;
 
     private final int RINGTONE_PICKER_ACTIVITY = 1;
 
@@ -133,7 +134,7 @@ public class SettingsActivity extends PreferenceActivity {
                 }
 
                 // set values to display
-                accNumberLabel.setText(PNid); // Phone number
+                /*accNumberLabel.setText(PNid); // Phone number
                 accIdLabel.setText(SIDid); // Serval ID
                 accNameLabel.setText(NMid); // Name
 
@@ -149,14 +150,14 @@ public class SettingsActivity extends PreferenceActivity {
                 dialog.setView(ll);
                 dialog.setMessage("Вы действительно хотите очистить свои данные?");//# теперь что скомпилировать
                 dialog.setPositiveButton("Да", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
+                    public void onClick(DialogInterface dialog, int id) {*/
                         startActivity(new Intent(SettingsActivity.this,
                                 org.servalproject.wizard.SetPhoneNumber.class));
-                        dialog.dismiss();
+                        /*dialog.dismiss();
                     }
                 });
                 dialog.setNegativeButton(android.R.string.cancel, null);
-                dialog.show();
+                dialog.show();*/
                 return true;
             }
         });
@@ -218,6 +219,17 @@ public class SettingsActivity extends PreferenceActivity {
                 intent.putExtra("extra.url", "index.html");
                 intent.putExtra("extra.title", "Документация");
                 startActivity(intent);
+                return true;
+            }
+        });
+
+        shareApp = findPreference("shareApp");
+        shareApp.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference p1) {
+                if (ServalBatPhoneApplication.getContext() != null) {
+                    ServalBatPhoneApplication.getContext().shareViaBluetooth();
+                }
                 return true;
             }
         });

@@ -32,16 +32,16 @@
 
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="Data">
+    <PreferenceCategory android:title="Аккаунт">
 
         <Preference
             android:key="resetDetails"
-            android:summary="@string/pref_summary_reset_details"
-            android:title="@string/PhoneResetLabel" />
+            android:summary="Изменить данные"
+            android:title="Данные аккаунта" />
 
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="Others">
+    <PreferenceCategory android:title="Другое">
 
         <!-- Preference
             android:key="meshTesting"
@@ -52,6 +52,11 @@
             android:key="viewLogs"
             android:summary="@string/LogShowText"
             android:title="@string/LogShowLabel" / -->
+
+        <Preference
+            android:key="shareApp"
+            android:summary="Поделиться приложением"
+            android:title="Поделиться" />
 
         <Preference
             android:key="website"
